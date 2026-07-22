@@ -1,0 +1,694 @@
+diff --git a/Marlin/Configuration.h b/Marlin/Configuration.h
+index 0e22a1a..2add565 100644
+--- a/Marlin/Configuration.h
++++ b/Marlin/Configuration.h
+@@ -21,6 +21,8 @@
+  */
+ #pragma once
+ 
++#define CONFIG_EXAMPLES_DIR "Creality/Ender-3/CrealityV422"
++
+ /**
+  * Configuration.h
+  *
+@@ -61,7 +63,7 @@
+ // @section info
+ 
+ // Author info of this build printed to the host during boot and M115
+-#define STRING_CONFIG_H_AUTHOR "(none, default config)" // Who made the changes.
++#define STRING_CONFIG_H_AUTHOR "(Dust, valerionew, Ender-3)" // Who made the changes.
+ //#define CUSTOM_VERSION_FILE Version.h // Path from the root directory (no quotes)
+ 
+ /**
+@@ -79,16 +81,16 @@
+ #define SHOW_BOOTSCREEN
+ 
+ // Show the bitmap in Marlin/_Bootscreen.h on startup.
+-//#define SHOW_CUSTOM_BOOTSCREEN
++#define SHOW_CUSTOM_BOOTSCREEN
+ 
+ // Show the bitmap in Marlin/_Statusscreen.h on the status screen.
+-//#define CUSTOM_STATUS_SCREEN_IMAGE
++#define CUSTOM_STATUS_SCREEN_IMAGE
+ 
+ // @section machine
+ 
+ // Choose the name from boards.h that matches your setup
+ #ifndef MOTHERBOARD
+-  #define MOTHERBOARD BOARD_RAMPS_14_EFB
++  #define MOTHERBOARD BOARD_CREALITY_V422
+ #endif
+ 
+ // @section serial
+@@ -101,7 +103,7 @@
+  *
+  * :[-1, 0, 1, 2, 3, 4, 5, 6, 7]
+  */
+-#define SERIAL_PORT 0
++#define SERIAL_PORT 1
+ 
+ /**
+  * Serial Port Baud Rate
+@@ -114,7 +116,7 @@
+  *
+  * :[2400, 9600, 19200, 38400, 57600, 115200, 250000, 500000, 1000000]
+  */
+-#define BAUDRATE 250000
++#define BAUDRATE 115200
+ 
+ //#define BAUD_RATE_GCODE     // Enable G-code M575 to set the baud rate
+ 
+@@ -124,7 +126,7 @@
+  * :[-2, -1, 0, 1, 2, 3, 4, 5, 6, 7]
+  */
+ //#define SERIAL_PORT_2 -1
+-//#define BAUDRATE_2 250000   // :[2400, 9600, 19200, 38400, 57600, 115200, 250000, 500000, 1000000] Enable to override BAUDRATE
++//#define BAUDRATE_2 250000
+ 
+ /**
+  * Select a third serial port on the board to use for communication with the host.
+@@ -138,7 +140,7 @@
+ //#define BLUETOOTH
+ 
+ // Name displayed in the LCD "Ready" message and Info menu
+-//#define CUSTOM_MACHINE_NAME "3D Printer"
++#define CUSTOM_MACHINE_NAME "Stepper Tester"
+ 
+ // Printer's unique ID, used by some programs to differentiate between machines.
+ // Choose your own or use a service like https://www.uuidgenerator.net/version4
+@@ -551,7 +553,7 @@
+  *   998 : Dummy Table that ALWAYS reads 25°C or the temperature defined below.
+  *   999 : Dummy Table that ALWAYS reads 100°C or the temperature defined below.
+  */
+-#define TEMP_SENSOR_0 1
++#define TEMP_SENSOR_0 998
+ #define TEMP_SENSOR_1 0
+ #define TEMP_SENSOR_2 0
+ #define TEMP_SENSOR_3 0
+@@ -559,7 +561,7 @@
+ #define TEMP_SENSOR_5 0
+ #define TEMP_SENSOR_6 0
+ #define TEMP_SENSOR_7 0
+-#define TEMP_SENSOR_BED 1
++#define TEMP_SENSOR_BED 998
+ #define TEMP_SENSOR_PROBE 0
+ #define TEMP_SENSOR_CHAMBER 0
+ #define TEMP_SENSOR_COOLER 0
+@@ -642,7 +644,7 @@
+ #define HEATER_5_MAXTEMP 275
+ #define HEATER_6_MAXTEMP 275
+ #define HEATER_7_MAXTEMP 275
+-#define BED_MAXTEMP      150
++#define BED_MAXTEMP      125
+ #define CHAMBER_MAXTEMP  60
+ 
+ /**
+@@ -679,16 +681,17 @@
+   //#define PID_PARAMS_PER_HOTEND // Use separate PID parameters for each extruder (useful for mismatched extruders)
+                                   // Set/get with G-code: M301 E[extruder number, 0-2]
+ 
++  // Creality Ender-3
+   #if ENABLED(PID_PARAMS_PER_HOTEND)
+     // Specify up to one value per hotend here, according to your setup.
+     // If there are fewer values, the last one applies to the remaining hotends.
+-    #define DEFAULT_Kp_LIST {  22.20,  22.20 }
+-    #define DEFAULT_Ki_LIST {   1.08,   1.08 }
+-    #define DEFAULT_Kd_LIST { 114.00, 114.00 }
++    #define DEFAULT_Kp_LIST {  21.73,  21.73 }
++    #define DEFAULT_Ki_LIST {   1.54,   1.54 }
++    #define DEFAULT_Kd_LIST {  76.55,  76.55 }
+   #else
+-    #define DEFAULT_Kp  22.20
+-    #define DEFAULT_Ki   1.08
+-    #define DEFAULT_Kd 114.00
++    #define DEFAULT_Kp  21.73
++    #define DEFAULT_Ki   1.54
++    #define DEFAULT_Kd  76.55
+   #endif
+ #else
+   #define BANG_MAX 255    // Limit hotend current while in bang-bang mode; 255=full current
+@@ -779,6 +782,12 @@
+   #define DEFAULT_bedKi .023
+   #define DEFAULT_bedKd 305.4
+ 
++  // 120V 250W silicone heater into 4mm borosilicate (MendelMax 1.5+)
++  // from pidautotune
++  //#define DEFAULT_bedKp 97.1
++  //#define DEFAULT_bedKi 1.41
++  //#define DEFAULT_bedKd 1675.16
++
+   // FIND YOUR OWN: "M303 E-1 C8 S90" to run autotune on the bed at 90 degreesC for 8 cycles.
+ #else
+   //#define BED_LIMIT_SWITCHING   // Keep the bed temperature within BED_HYSTERESIS of the target
+@@ -837,8 +846,8 @@
+   #define PID_FUNCTIONAL_RANGE 10 // If the temperature difference between the target temperature and the actual temperature
+                                   // is more than PID_FUNCTIONAL_RANGE then the PID will be shut off and the heater will be set to min/max.
+ 
+-  //#define PID_EDIT_MENU         // Add PID editing to the "Advanced Settings" menu. (~700 bytes of flash)
+-  //#define PID_AUTOTUNE_MENU     // Add PID auto-tuning to the "Advanced Settings" menu. (~250 bytes of flash)
++  #define PID_EDIT_MENU           // Add PID editing to the "Advanced Settings" menu. (~700 bytes of flash)
++  #define PID_AUTOTUNE_MENU       // Add PID auto-tuning to the "Advanced Settings" menu. (~250 bytes of flash)
+ #endif
+ 
+ // @section safety
+@@ -850,14 +859,14 @@
+  *
+  * *** IT IS HIGHLY RECOMMENDED TO LEAVE THIS OPTION ENABLED! ***
+  */
+-#define PREVENT_COLD_EXTRUSION
++//#define PREVENT_COLD_EXTRUSION
+ #define EXTRUDE_MINTEMP 170
+ 
+ /**
+  * Prevent a single extrusion longer than EXTRUDE_MAXLENGTH.
+  * Note: For Bowden Extruders make this large enough to allow load/unload.
+  */
+-#define PREVENT_LENGTHY_EXTRUDE
++//#define PREVENT_LENGTHY_EXTRUDE
+ #define EXTRUDE_MAXLENGTH 200
+ 
+ //===========================================================================
+@@ -877,10 +886,10 @@
+  * details can be tuned in Configuration_adv.h
+  */
+ 
+-#define THERMAL_PROTECTION_HOTENDS // Enable thermal protection for all extruders
+-#define THERMAL_PROTECTION_BED     // Enable thermal protection for the heated bed
+-#define THERMAL_PROTECTION_CHAMBER // Enable thermal protection for the heated chamber
+-#define THERMAL_PROTECTION_COOLER  // Enable thermal protection for the laser cooling
++//#define THERMAL_PROTECTION_HOTENDS // Enable thermal protection for all extruders
++//#define THERMAL_PROTECTION_BED     // Enable thermal protection for the heated bed
++//#define THERMAL_PROTECTION_CHAMBER // Enable thermal protection for the heated chamber
++//#define THERMAL_PROTECTION_COOLER  // Enable thermal protection for the laser cooling
+ 
+ //===========================================================================
+ //============================= Mechanical Settings =========================
+@@ -1196,14 +1205,14 @@
+  * Override with M92
+  *                                      X, Y, Z [, I [, J [, K...]]], E0 [, E1[, E2...]]
+  */
+-#define DEFAULT_AXIS_STEPS_PER_UNIT   { 80, 80, 400, 500 }
++#define DEFAULT_AXIS_STEPS_PER_UNIT   { 80, 80, 400, 93 }
+ 
+ /**
+  * Default Max Feed Rate (linear=mm/s, rotational=°/s)
+  * Override with M203
+  *                                      X, Y, Z [, I [, J [, K...]]], E0 [, E1[, E2...]]
+  */
+-#define DEFAULT_MAX_FEEDRATE          { 300, 300, 5, 25 }
++#define DEFAULT_MAX_FEEDRATE          { 1000, 1000, 1000, 1000 }
+ 
+ //#define LIMITED_MAX_FR_EDITING        // Limit edit via M203 or LCD to DEFAULT_MAX_FEEDRATE * 2
+ #if ENABLED(LIMITED_MAX_FR_EDITING)
+@@ -1216,7 +1225,7 @@
+  * Override with M201
+  *                                      X, Y, Z [, I [, J [, K...]]], E0 [, E1[, E2...]]
+  */
+-#define DEFAULT_MAX_ACCELERATION      { 3000, 3000, 100, 10000 }
++#define DEFAULT_MAX_ACCELERATION      { 500, 500, 100, 5000 }
+ 
+ //#define LIMITED_MAX_ACCEL_EDITING     // Limit edit via M201 or LCD to DEFAULT_MAX_ACCELERATION * 2
+ #if ENABLED(LIMITED_MAX_ACCEL_EDITING)
+@@ -1231,9 +1240,9 @@
+  *   M204 R    Retract Acceleration
+  *   M204 T    Travel Acceleration
+  */
+-#define DEFAULT_ACCELERATION          3000    // X, Y, Z and E acceleration for printing moves
+-#define DEFAULT_RETRACT_ACCELERATION  3000    // E acceleration for retracts
+-#define DEFAULT_TRAVEL_ACCELERATION   3000    // X, Y, Z acceleration for travel (non printing) moves
++#define DEFAULT_ACCELERATION           500    // X, Y, Z and E acceleration for printing moves
++#define DEFAULT_RETRACT_ACCELERATION   500    // E acceleration for retracts
++#define DEFAULT_TRAVEL_ACCELERATION    500    // X, Y, Z acceleration for travel (non printing) moves
+ 
+ /**
+  * Default Jerk limits (mm/s)
+@@ -1273,7 +1282,7 @@
+  *   https://blog.kyneticcnc.com/2018/10/computing-junction-deviation-for-marlin.html
+  */
+ #if DISABLED(CLASSIC_JERK)
+-  #define JUNCTION_DEVIATION_MM 0.013 // (mm) Distance from real junction edge
++  #define JUNCTION_DEVIATION_MM 0.08  // (mm) Distance from real junction edge
+   #define JD_HANDLE_SMALL_SEGMENTS    // Use curvature estimation instead of just the junction angle
+                                       // for small segments (< 1mm) with large junction angles (> 135°).
+ #endif
+@@ -1286,7 +1295,7 @@
+  *
+  * See https://github.com/synthetos/TinyG/wiki/Jerk-Controlled-Motion-Explained
+  */
+-//#define S_CURVE_ACCELERATION
++#define S_CURVE_ACCELERATION
+ 
+ //===========================================================================
+ //============================= Z Probe Options =============================
+@@ -1665,14 +1674,14 @@
+ // @section extruder
+ 
+ //#define DISABLE_E               // Disable the extruder when not stepping
+-#define DISABLE_OTHER_EXTRUDERS   // Keep only the active extruder enabled
++//#define DISABLE_OTHER_EXTRUDERS // Keep only the active extruder enabled
+ 
+ // @section motion
+ 
+ // Invert the stepper direction. Change (or reverse the motor connector) if an axis goes the wrong way.
+ #define INVERT_X_DIR false
+-#define INVERT_Y_DIR true
+-#define INVERT_Z_DIR false
++#define INVERT_Y_DIR false
++#define INVERT_Z_DIR true
+ //#define INVERT_I_DIR false
+ //#define INVERT_J_DIR false
+ //#define INVERT_K_DIR false
+@@ -1724,16 +1733,16 @@
+ // @section geometry
+ 
+ // The size of the printable area
+-#define X_BED_SIZE 200
+-#define Y_BED_SIZE 200
++#define X_BED_SIZE 10000000
++#define Y_BED_SIZE 10000000
+ 
+ // Travel limits (linear=mm, rotational=°) after homing, corresponding to endstop positions.
+-#define X_MIN_POS 0
+-#define Y_MIN_POS 0
+-#define Z_MIN_POS 0
++#define X_MIN_POS -1000000
++#define Y_MIN_POS -1000000
++#define Z_MIN_POS -1000000
+ #define X_MAX_POS X_BED_SIZE
+ #define Y_MAX_POS Y_BED_SIZE
+-#define Z_MAX_POS 200
++#define Z_MAX_POS 10000000
+ //#define I_MIN_POS 0
+ //#define I_MAX_POS 50
+ //#define J_MIN_POS 0
+@@ -1757,7 +1766,7 @@
+  */
+ 
+ // Min software endstops constrain movement within minimum coordinate bounds
+-#define MIN_SOFTWARE_ENDSTOPS
++//#define MIN_SOFTWARE_ENDSTOPS
+ #if ENABLED(MIN_SOFTWARE_ENDSTOPS)
+   #define MIN_SOFTWARE_ENDSTOP_X
+   #define MIN_SOFTWARE_ENDSTOP_Y
+@@ -1771,7 +1780,7 @@
+ #endif
+ 
+ // Max software endstops constrain movement within maximum coordinate bounds
+-#define MAX_SOFTWARE_ENDSTOPS
++//#define MAX_SOFTWARE_ENDSTOPS
+ #if ENABLED(MAX_SOFTWARE_ENDSTOPS)
+   #define MAX_SOFTWARE_ENDSTOP_X
+   #define MAX_SOFTWARE_ENDSTOP_Y
+@@ -2130,7 +2139,7 @@
+ #endif
+ 
+ // Homing speeds (linear=mm/min, rotational=°/min)
+-#define HOMING_FEEDRATE_MM_M { (50*60), (50*60), (4*60) }
++#define HOMING_FEEDRATE_MM_M { (20*60), (20*60), (4*60) }
+ 
+ // Validate that endstops are triggered on homing moves
+ #define VALIDATE_HOMING_ENDSTOPS
+@@ -2208,7 +2217,7 @@
+  *   M501 - Read settings from EEPROM. (i.e., Throw away unsaved changes)
+  *   M502 - Revert settings to "factory" defaults. (Follow with M500 to init the EEPROM.)
+  */
+-//#define EEPROM_SETTINGS     // Persistent storage with M500 and M501
++//#define EEPROM_SETTINGS       // Persistent storage with M500 and M501
+ //#define DISABLE_M503        // Saves ~2700 bytes of flash. Disable for release!
+ #define EEPROM_CHITCHAT       // Give feedback on EEPROM commands. Disable to save flash.
+ #define EEPROM_BOOT_SILENT    // Keep M503 quiet and only give errors during first load
+@@ -2247,16 +2256,16 @@
+ // Preheat Constants - Up to 10 are supported without changes
+ //
+ #define PREHEAT_1_LABEL       "PLA"
+-#define PREHEAT_1_TEMP_HOTEND 180
+-#define PREHEAT_1_TEMP_BED     70
++#define PREHEAT_1_TEMP_HOTEND 220
++#define PREHEAT_1_TEMP_BED     45
+ #define PREHEAT_1_TEMP_CHAMBER 35
+-#define PREHEAT_1_FAN_SPEED     0 // Value from 0 to 255
++#define PREHEAT_1_FAN_SPEED   0 // Value from 0 to 255
+ 
+ #define PREHEAT_2_LABEL       "ABS"
+ #define PREHEAT_2_TEMP_HOTEND 240
+-#define PREHEAT_2_TEMP_BED    110
++#define PREHEAT_2_TEMP_BED     60
+ #define PREHEAT_2_TEMP_CHAMBER 35
+-#define PREHEAT_2_FAN_SPEED     0 // Value from 0 to 255
++#define PREHEAT_2_FAN_SPEED   0 // Value from 0 to 255
+ 
+ /**
+  * @section nozzle park
+@@ -2583,7 +2592,7 @@
+ // If you have a speaker that can produce tones, enable it here.
+ // By default Marlin assumes you have a buzzer with a fixed frequency.
+ //
+-//#define SPEAKER
++#define SPEAKER
+ 
+ //
+ // The duration and frequency for the UI feedback sound.
+@@ -2872,7 +2881,10 @@
+ //
+ // Connect to EXP1 on RAMPS and compatible boards.
+ //
+-//#define CR10_STOCKDISPLAY
++#define CR10_STOCKDISPLAY
++#if ENABLED(CR10_STOCKDISPLAY)
++  #define RET6_12864_LCD
++#endif
+ 
+ //
+ // Ender-2 OEM display, a variant of the MKS_MINI_12864
+@@ -3261,7 +3273,7 @@
+ // Use software PWM to drive the fan, as for the heaters. This uses a very low frequency
+ // which is not as annoying as with the hardware PWM. On the other hand, if this frequency
+ // is too low, you should also increment SOFT_PWM_SCALE.
+-//#define FAN_SOFT_PWM
++#define FAN_SOFT_PWM
+ 
+ // Incrementing this by 1 will double the software PWM frequency,
+ // affecting heaters, and the fan if FAN_SOFT_PWM is enabled.
+diff --git a/Marlin/Configuration_adv.h b/Marlin/Configuration_adv.h
+index 6557ad8..d0fbff2 100644
+--- a/Marlin/Configuration_adv.h
++++ b/Marlin/Configuration_adv.h
+@@ -21,6 +21,8 @@
+  */
+ #pragma once
+ 
++#define CONFIG_EXAMPLES_DIR "Creality/Ender-3/CrealityV422"
++
+ /**
+  * Configuration_adv.h
+  *
+@@ -885,7 +887,7 @@
+ //#define HOMING_BACKOFF_POST_MM { 2, 2, 2 }  // (linear=mm, rotational=°) Backoff from endstops after homing
+ //#define XY_COUNTERPART_BACKOFF_MM 0         // (mm) Backoff X after homing Y, and vice-versa
+ 
+-//#define QUICK_HOME                          // If G28 contains XY do a diagonal move first
++#define QUICK_HOME                            // If G28 contains XY do a diagonal move first
+ //#define HOME_Y_BEFORE_X                     // If G28 contains XY home Y before X
+ //#define HOME_Z_FIRST                        // Home Z first. Requires a real endstop (not a probe).
+ //#define CODEPENDENT_XY_HOMING               // If X/Y can't home without homing Y/X first
+@@ -1054,7 +1056,7 @@
+    *   M4: 40 = Clockwise, 41 = Counter-Clockwise
+    *   M5: 50 = Clockwise, 51 = Counter-Clockwise
+    */
+-  #define TRAMMING_SCREW_THREAD 30
++  #define TRAMMING_SCREW_THREAD 40
+ 
+ #endif
+ 
+@@ -1415,7 +1417,7 @@
+   #endif
+ 
+   // Include a page of printer information in the LCD Main Menu
+-  //#define LCD_INFO_MENU
++  #define LCD_INFO_MENU
+   #if ENABLED(LCD_INFO_MENU)
+     //#define LCD_PRINTER_INFO_IS_BOOTSCREEN // Show bootscreen(s) instead of Printer Info pages
+   #endif
+@@ -1445,7 +1447,16 @@
+   #endif
+ 
+   // Scroll a longer status message into view
+-  //#define STATUS_MESSAGE_SCROLLING
++#define STATUS_MESSAGE_SCROLLING
++
++// MCU link through the CH340 / primary USART1. The receiver should reply to
++// "HB n" with "M118 HB_ACK n" to confirm the round trip on the LCD.
++#define STEPPER_LINK_HEARTBEAT
++#define STEPPER_LINK_HEARTBEAT_INTERVAL 2000
++#define STEPPER_LINK_SWITCH_REPORT
++#define STEPPER_LINK_SWITCH_SAMPLE_INTERVAL 5
++#define STEPPER_LINK_SWITCH_REPORT_INTERVAL 1000
++#define STEPPER_LINK_SWITCH_DEBOUNCE_SAMPLES 3
+ 
+   // Apply a timeout to low-priority status messages
+   //#define STATUS_MESSAGE_TIMEOUT_SEC 30 // (seconds)
+@@ -1535,7 +1546,7 @@
+   //#define SD_DETECT_STATE HIGH
+ 
+   //#define SD_IGNORE_AT_STARTUP            // Don't mount the SD card when starting up
+-  //#define SDCARD_READONLY                 // Read-only SD card (to save over 2K of flash)
++  #define SDCARD_READONLY                   // Read-only SD card (to save over 2K of flash)
+ 
+   //#define GCODE_REPEAT_MARKERS            // Enable G-code M808 to set repeat markers and do looping
+ 
+@@ -1640,7 +1651,7 @@
+   //#define LONG_FILENAME_WRITE_SUPPORT   // Create / delete files with long filenames via M28, M30, and Binary Transfer Protocol
+   //#define M20_TIMESTAMP_SUPPORT         // Include timestamps by adding the 'T' flag to M20 commands
+ 
+-  //#define SCROLL_LONG_FILENAMES         // Scroll long filenames in the SD card menu
++  #define SCROLL_LONG_FILENAMES           // Scroll long filenames in the SD card menu
+ 
+   //#define SD_ABORT_NO_COOLDOWN          // Leave the heaters on after Stop Print (not recommended!)
+ 
+@@ -2050,7 +2061,7 @@
+  * NOTE: This method is less reliable as it can only catch hangups while
+  * interrupts are enabled.
+  */
+-#define USE_WATCHDOG
++//#define USE_WATCHDOG
+ #if ENABLED(USE_WATCHDOG)
+   //#define WATCHDOG_RESET_MANUAL
+ #endif
+@@ -2064,7 +2075,7 @@
+  *
+  * Warning: Does not respect endstops!
+  */
+-//#define BABYSTEPPING
++#define BABYSTEPPING
+ #if ENABLED(BABYSTEPPING)
+   //#define INTEGRATED_BABYSTEPPING         // EXPERIMENTAL integration of babystepping into the Stepper ISR
+   //#define BABYSTEP_WITHOUT_HOMING
+@@ -2075,7 +2086,7 @@
+   #define BABYSTEP_MULTIPLICATOR_Z  1       // (steps or mm) Steps or millimeter distance for each Z babystep
+   #define BABYSTEP_MULTIPLICATOR_XY 1       // (steps or mm) Steps or millimeter distance for each XY babystep
+ 
+-  //#define DOUBLECLICK_FOR_Z_BABYSTEPPING  // Double-click on the Status Screen for Z Babystepping.
++  #define DOUBLECLICK_FOR_Z_BABYSTEPPING    // Double-click on the Status Screen for Z Babystepping.
+   #if ENABLED(DOUBLECLICK_FOR_Z_BABYSTEPPING)
+     #define DOUBLECLICK_MAX_INTERVAL 1250   // Maximum interval between clicks, in milliseconds.
+                                             // Note: Extra time may be added to mitigate controller latency.
+@@ -2449,7 +2460,7 @@
+  * Currently handles M108, M112, M410, M876
+  * NOTE: Not yet implemented for all platforms.
+  */
+-//#define EMERGENCY_PARSER
++#define EMERGENCY_PARSER
+ 
+ /**
+  * Realtime Reporting (requires EMERGENCY_PARSER)
+@@ -2732,7 +2743,7 @@
+   #define INTERPOLATE      true
+ 
+   #if AXIS_IS_TMC_CONFIG(X)
+-    #define X_CURRENT       800        // (mA) RMS current. Multiply by 1.414 for peak current.
++    #define X_CURRENT       580        // (mA) RMS current. Multiply by 1.414 for peak current.
+     #define X_CURRENT_HOME  X_CURRENT  // (mA) RMS current for homing. (Typically lower than *_CURRENT.)
+     #define X_MICROSTEPS     16        // 0..256
+     #define X_RSENSE          0.11     // Multiplied x1000 for TMC26X
+@@ -2752,7 +2763,7 @@
+   #endif
+ 
+   #if AXIS_IS_TMC_CONFIG(Y)
+-    #define Y_CURRENT       800
++    #define Y_CURRENT       580
+     #define Y_CURRENT_HOME  Y_CURRENT
+     #define Y_MICROSTEPS     16
+     #define Y_RSENSE          0.11
+@@ -2772,7 +2783,7 @@
+   #endif
+ 
+   #if AXIS_IS_TMC_CONFIG(Z)
+-    #define Z_CURRENT       800
++    #define Z_CURRENT       580
+     #define Z_CURRENT_HOME  Z_CURRENT
+     #define Z_MICROSTEPS     16
+     #define Z_RSENSE          0.11
+@@ -2872,7 +2883,7 @@
+   #endif
+ 
+   #if AXIS_IS_TMC_CONFIG(E0)
+-    #define E0_CURRENT      800
++    #define E0_CURRENT      650
+     #define E0_MICROSTEPS    16
+     #define E0_RSENSE         0.11
+     #define E0_CHAIN_POS     -1
+@@ -3063,7 +3074,7 @@
+    * Define your own with:
+    * { <off_time[1..15]>, <hysteresis_end[-3..12]>, hysteresis_start[1..8] }
+    */
+-  #define CHOPPER_TIMING CHOPPER_DEFAULT_12V        // All axes (override below)
++  #define CHOPPER_TIMING CHOPPER_DEFAULT_24V        // All axes (override below)
+   //#define CHOPPER_TIMING_X  CHOPPER_TIMING        // For X Axes (override below)
+   //#define CHOPPER_TIMING_X2 CHOPPER_TIMING_X
+   //#define CHOPPER_TIMING_Y  CHOPPER_TIMING        // For Y Axes (override below)
+diff --git a/Marlin/src/MarlinCore.cpp b/Marlin/src/MarlinCore.cpp
+index 8fddd12..a36ae61 100644
+--- a/Marlin/src/MarlinCore.cpp
++++ b/Marlin/src/MarlinCore.cpp
+@@ -844,6 +844,59 @@ void idle(const bool no_stepper_sleep/*=false*/) {
+   // Handle UI input / draw events
+   TERN(DWIN_CREALITY_LCD, DWIN_Update(), ui.update());
+ 
++  #if ENABLED(STEPPER_LINK_HEARTBEAT)
++    {
++      static millis_t next_heartbeat_ms;
++      static uint16_t heartbeat_sequence;
++      const millis_t heartbeat_ms = millis();
++      if (ELAPSED(heartbeat_ms, next_heartbeat_ms)) {
++        next_heartbeat_ms = heartbeat_ms + STEPPER_LINK_HEARTBEAT_INTERVAL;
++        MYSERIAL1.print("HB ");
++        MYSERIAL1.println(++heartbeat_sequence);
++        #if HAS_STATUS_MESSAGE
++          ui.set_status("Heartbeat out", true);
++        #endif
++      }
++    }
++  #endif
++
++  #if ENABLED(STEPPER_LINK_SWITCH_REPORT)
++    {
++      static millis_t next_switch_sample_ms, next_switch_report_ms;
++      static uint8_t candidate_switches = 0xFF, stable_switches = 0xFF, stable_samples;
++      const millis_t switch_ms = millis();
++      if (ELAPSED(switch_ms, next_switch_sample_ms)) {
++        next_switch_sample_ms = switch_ms + STEPPER_LINK_SWITCH_SAMPLE_INTERVAL;
++        const uint8_t sampled_switches =
++            (READ(X_MIN_PIN) != X_MIN_ENDSTOP_INVERTING ? _BV(0) : 0)
++          | (READ(Y_MIN_PIN) != Y_MIN_ENDSTOP_INVERTING ? _BV(1) : 0)
++          | (READ(Z_MIN_PIN) != Z_MIN_ENDSTOP_INVERTING ? _BV(2) : 0);
++
++        if (sampled_switches == candidate_switches) {
++          if (stable_samples < STEPPER_LINK_SWITCH_DEBOUNCE_SAMPLES) ++stable_samples;
++        }
++        else {
++          candidate_switches = sampled_switches;
++          stable_samples = 1;
++        }
++
++        const bool changed = stable_samples >= STEPPER_LINK_SWITCH_DEBOUNCE_SAMPLES
++                          && stable_switches != candidate_switches;
++        if (changed) stable_switches = candidate_switches;
++
++        if (stable_switches != 0xFF && (changed || ELAPSED(switch_ms, next_switch_report_ms))) {
++          next_switch_report_ms = switch_ms + STEPPER_LINK_SWITCH_REPORT_INTERVAL;
++          MYSERIAL1.print("SW X");
++          MYSERIAL1.print(bool(stable_switches & _BV(0)));
++          MYSERIAL1.print(" Y");
++          MYSERIAL1.print(bool(stable_switches & _BV(1)));
++          MYSERIAL1.print(" Z");
++          MYSERIAL1.println(bool(stable_switches & _BV(2)));
++        }
++      }
++    }
++  #endif
++
+   // Run i2c Position Encoders
+   #if ENABLED(I2C_POSITION_ENCODERS)
+   {
+@@ -886,6 +939,20 @@ void idle(const bool no_stepper_sleep/*=false*/) {
+   return;
+ }
+ 
++#if ENABLED(STEPPER_LINK_HEARTBEAT)
++  void stepper_link_heartbeat_ack(const char *sequence) {
++    MYSERIAL1.print("HB_ACK_OK");
++    if (sequence && *sequence) {
++      MYSERIAL1.write(' ');
++      MYSERIAL1.print(sequence);
++    }
++    MYSERIAL1.println();
++    #if HAS_STATUS_MESSAGE
++      ui.set_status("Heartbeat acknowledged", true);
++    #endif
++  }
++#endif
++
+ /**
+  * Kill all activity and lock the machine.
+  * After this the machine will need to be reset.
+diff --git a/Marlin/src/MarlinCore.h b/Marlin/src/MarlinCore.h
+index e9c63bb..16b081b 100644
+--- a/Marlin/src/MarlinCore.h
++++ b/Marlin/src/MarlinCore.h
+@@ -31,6 +31,10 @@ void stop();
+ 
+ // Pass true to keep steppers from timing out
+ void idle(const bool no_stepper_sleep=false);
++
++#if ENABLED(STEPPER_LINK_HEARTBEAT)
++  void stepper_link_heartbeat_ack(const char *sequence);
++#endif
+ inline void idle_no_sleep() { idle(true); }
+ 
+ #if ENABLED(G38_PROBE_TARGET)
+diff --git a/Marlin/src/gcode/host/M118.cpp b/Marlin/src/gcode/host/M118.cpp
+index d6e591a..1c2d97c 100644
+--- a/Marlin/src/gcode/host/M118.cpp
++++ b/Marlin/src/gcode/host/M118.cpp
+@@ -22,6 +22,7 @@
+ 
+ #include "../gcode.h"
+ #include "../../core/serial.h"
++#include "../../MarlinCore.h"
+ 
+ /**
+  * M118: Display a message in the host console.
+@@ -52,6 +53,14 @@ void GcodeSuite::M118() {
+     while (*p == ' ') ++p;
+   }
+ 
++  #if ENABLED(STEPPER_LINK_HEARTBEAT)
++    if (!strncmp(p, "HB_ACK", 6) && (!p[6] || p[6] == ' ')) {
++      const char *sequence = p + 6;
++      while (*sequence == ' ') ++sequence;
++      stepper_link_heartbeat_ack(sequence);
++    }
++  #endif
++
+   PORT_REDIRECT(WITHIN(port, 0, NUM_SERIAL) ? (port ? SERIAL_PORTMASK(port - 1) : SerialMask::All) : multiSerial.portMask);
+ 
+   if (hasE) SERIAL_ECHO_START();
+diff --git a/Marlin/src/lcd/marlinui.cpp b/Marlin/src/lcd/marlinui.cpp
+index b21a534..faed7d9 100644
+--- a/Marlin/src/lcd/marlinui.cpp
++++ b/Marlin/src/lcd/marlinui.cpp
+@@ -812,7 +812,7 @@ void MarlinUI::init() {
+       // Add a manual move to the queue?
+       if (axis != NO_AXIS_ENUM && ELAPSED(millis(), start_time) && !planner.is_full()) {
+ 
+-        const feedRate_t fr_mm_s = (axis < LOGICAL_AXES) ? manual_feedrate_mm_s[axis] : XY_PROBE_FEEDRATE_MM_S;
++        const feedRate_t fr_mm_s = MMS_SCALED((axis < LOGICAL_AXES) ? manual_feedrate_mm_s[axis] : XY_PROBE_FEEDRATE_MM_S);
+ 
+         #if IS_KINEMATIC
+ 
+diff --git a/Marlin/src/lcd/menu/menu_motion.cpp b/Marlin/src/lcd/menu/menu_motion.cpp
+index 5c16a56..3d1e3c1 100644
+--- a/Marlin/src/lcd/menu/menu_motion.cpp
++++ b/Marlin/src/lcd/menu/menu_motion.cpp
+@@ -324,6 +324,8 @@ void menu_motion() {
+   if (TERN1(DELTA, all_axes_homed()))
+     SUBMENU(MSG_MOVE_AXIS, menu_move);
+ 
++  EDIT_ITEM(int3, MSG_SPEED, &feedrate_percentage, 10, 999);
++
+   //
+   // Auto Home
+   //
+diff --git a/platformio.ini b/platformio.ini
+index e3bdb6f..bbed133 100644
+--- a/platformio.ini
++++ b/platformio.ini
+@@ -13,7 +13,7 @@
+ [platformio]
+ src_dir      = Marlin
+ boards_dir   = buildroot/share/PlatformIO/boards
+-default_envs = mega2560
++default_envs = STM32F103RE_creality
+ include_dir  = Marlin
+ extra_configs =
+     Marlin/config.ini
