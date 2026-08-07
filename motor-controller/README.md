@@ -7,17 +7,19 @@ stepper controller for the autonomous garden rover. The board has a
 GD32F303RET6 MCU and four onboard STEP/DIR drivers connected to the original
 X, Y, Z, and E motor sockets.
 
-The ESP32 is the control computer. It sends commands through the Ender board's
-primary USART and receives heartbeat, move-completion, and X/Y/Z switch data.
+The ESP32-P4 is the current rover control computer. It sends commands through the
+Ender board's primary USART and receives heartbeat, motion completion, and X/Y/Z
+switch data. Earlier Raspberry Pi 5 and ESP32 MicroPython clients remain as
+reference implementations.
 
 ## Electrical warning
 
-All UART signals are 3.3 V logic. Connect the ESP32 and Ender board grounds.
+All UART signals are 3.3 V logic. Connect the host and Ender board grounds.
 Never connect 5 V to a UART data line.
 
-The CH340 TXD pin is an output. An ESP32 TX output must not fight it. Isolate the
-CH340 TXD output from the GD32 RX net before driving that net from the ESP32.
-Do not connect a USB host to the CH340 while the ESP32 is connected this way.
+The CH340 TXD pin is an output. A Pi or ESP32 TX output must not fight it. Isolate
+the CH340 TXD output from the GD32 RX net before driving that net from another
+host. Do not connect a USB host to the CH340 while using the direct UART taps.
 A series resistor may limit fault current, but it does not replace proper
 isolation because the CH340 can hold the signal at the wrong logic level.
 
@@ -28,14 +30,26 @@ UART settings are **115200 baud, 8 data bits, no parity, 1 stop bit (8N1)**.
 For a CH340G-style SOP-16 package with the notch facing upward, numbering starts
 at the upper-left corner and proceeds counterclockwise:
 
-| Signal | Ender board net | CH340 package | ESP32 |
+| Signal | Ender board net | CH340 package | Host |
 |---|---|---|---|
 | Ground | GND | Pin 1, GND | GND |
-| Ender receives | GD32 PA10 / USART1 RX | Pin 2, CH340 TXD net | ESP32 TX |
-| Ender transmits | GD32 PA9 / USART1 TX | Pin 3, CH340 RXD net | ESP32 RX |
+| Ender receives | GD32 PA10 / USART1 RX | Pin 2, CH340 TXD net | Host TX |
+| Ender transmits | GD32 PA9 / USART1 TX | Pin 3, CH340 RXD net | Host RX |
 
 Verify the CH340 part marking, package orientation, and continuity before
 soldering. Similar USB-UART packages may use a different pinout.
+
+The Raspberry Pi 5 UART allocation is `/dev/ttyAMA3`:
+
+| Pi signal | Physical pin | Connect to |
+|---|---:|---|
+| GPIO8 / TX | 24 | GD32 PA10 / RX, on the isolated GD32 side |
+| GPIO9 / RX | 21 | GD32 PA9 / TX |
+| GND | 20 or another GND | Ender GND |
+
+See the [Raspberry Pi client instructions](raspberry-pi/README.md) before wiring.
+
+### ESP32 alternative
 
 The supplied MicroPython code accepts either data-wire orientation:
 
@@ -94,12 +108,17 @@ or chip marking before assuming the exact driver model.
 | Resource | GD32F303RET6 hardware | Current firmware |
 |---|---:|---:|
 | CPU clock | 120 MHz maximum | 72 MHz compatibility clock |
-| Flash | 512 KiB | 117,104 bytes (22.34%) |
-| SRAM | 64 KiB | 6,052 bytes static (9.23%) |
+| Flash | 512 KiB | 120,680 bytes (23.0%) |
+| SRAM | 64 KiB | 6,192 bytes static (9.4%) |
 
-Approximately 59,484 bytes remain before runtime stack and heap use. CPU load is
-dynamic: it is low while idle and rises with step rate. At 1000 RPM and 3200
-microsteps/revolution, one moving driver requires about 53,333 step pulses/s.
+The direct-motion build uses a 50 kHz timer ISR for independent simultaneous
+X/Y/Z/E pulse generation. Continuous targets are limited to 600 RPM, ramp at
+1,200 RPM/s, and stop after a 250 ms command timeout. Counted moves start all
+included axes together and report exact completion through `COUNT_DONE`.
+
+CPU load is dynamic: it is low while idle and rises with enabled axes and step
+rate. At the 600 RPM limit and 3200 microsteps/revolution, each moving driver
+requires 32,000 step pulses/s.
 
 Hardware specifications are available on the
 [GigaDevice GD32F303RET6 product page](https://www.gigadevice.com.cn/product/mcu/mcus-product-selector/gd32f303ret6)
@@ -112,6 +131,9 @@ connected.
 
 ## Related documentation
 
+- [ESP32-P4 continuous and counted direct-motion handoff](esp32-p4-gd32-direct-motion/README.md)
 - [UART protocol and API](UART_PROTOCOL.md)
+- [Raspberry Pi 5 Thonny client](raspberry-pi/README.md)
+- [Validated Pi 5 and GD32 working model](raspberry-pi/VALIDATED_WORKING_MODEL.md)
 - [ESP32 MicroPython code](esp32-micropython/README.md)
 - [Ender firmware and flashing](ender3-firmware/README.md)

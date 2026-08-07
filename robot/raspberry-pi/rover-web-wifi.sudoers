@@ -1,0 +1,3 @@
+aditya ALL=(root) NOPASSWD: /usr/local/sbin/rover-wifi-mode status
+aditya ALL=(root) NOPASSWD: /usr/local/sbin/rover-wifi-mode ap
+aditya ALL=(root) NOPASSWD: /usr/local/sbin/rover-wifi-mode router

@@ -1,0 +1,4 @@
+ba8ce2a6271cc2103dd0538c400d2af30e86e39e98cd8ca1f0bc335420d55648  firmware/GD3P4V1.BIN
+568e14aa30989eadd25805e8f9cca8ee0aaee88a759bbbdc6fb1692a14c62b15  source/marlin-2.1.2.5-gd32-direct-motion.patch
+5e3db24d4ada5fff72f5be59d68bcd833f24c9c5a123d972ebd9d33e8ad3453e  source/_Bootscreen.h
+c3c40eef368296020ce4e4bc9f6dab98b2b7133d17ca5fca408a3d24a0f5a567  source/_Statusscreen.h

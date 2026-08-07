@@ -1,0 +1,28 @@
+Command: cmake -G Ninja -B /home/aditya/Documents/Autonomous-Garden-Rover/bts7960-controller/esp32-p4-idf-uart-test/build -DPYTHON_DEPS_CHECKED=1 -DPYTHON=/tmp/esp32p4-esptool-venv-20260730/bin/python -DESP_PLATFORM=1 -DIDF_TARGET=esp32p4 -DCCACHE_ENABLE=False /home/aditya/Documents/Autonomous-Garden-Rover/bts7960-controller/esp32-p4-idf-uart-test
+fatal: not a git repository (or any of the parent directories): .git
+NOTE: /home/aditya/.platformio/packages/framework-espidf/components/bt/host/nimble/Kconfig.in:1421: BT_NIMBLE_MESH_PROVISIONER: 'default 0' is not a valid bool value (only 'y' and 'n' are allowed). Value is treated as 'n'.
+NOTE: /home/aditya/.platformio/packages/framework-espidf/components/fatfs/Kconfig:230: FATFS_PRINT_LLI: 'default 0' is not a valid bool value (only 'y' and 'n' are allowed). Value is treated as 'n'.
+NOTE: /home/aditya/.platformio/packages/framework-espidf/components/fatfs/Kconfig:235: FATFS_PRINT_FLOAT: 'default 0' is not a valid bool value (only 'y' and 'n' are allowed). Value is treated as 'n'.
+Loading defaults file /home/aditya/Documents/Autonomous-Garden-Rover/bts7960-controller/esp32-p4-idf-uart-test/sdkconfig.defaults...
+NOTE: Kconfig parser version: 1
+NOTE: Kconfig defaults policy: use sdkconfig
+NOTE: Status: Finished with notifications
+NOTE: /home/aditya/.platformio/packages/framework-espidf/components/esp_stdio/Kconfig:150: ESP_CONSOLE_UART_BAUDRATE has user-set value 115200 from /tmp/kconfgen_tmprgg5s496 but is not visible (disabled dependency)
+HINT: Disabled symbols/choices are not written into sdkconfig file. Setting their user value has no effect.
+fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository: /home/aditya/.platformio/packages/framework-espidf/components/openthread/openthread/../../../.git/modules/components/openthread/openthread
+Traceback (most recent call last):
+  File "/home/aditya/.platformio/packages/framework-espidf/components/esp_rom/gen_gdbinit.py", line 72, in <module>
+    gdbinit_lines = generate_gdbinit_rom_add_symbols(target)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/aditya/.platformio/packages/framework-espidf/components/esp_rom/gen_gdbinit.py", line 31, in generate_gdbinit_rom_add_symbols
+    raise OSError(
+OSError: ESP_ROM_ELF_DIR environment variable is not defined. Please try to run IDF "install" and "export" scripts.
+CMake Warning at /home/aditya/.platformio/packages/framework-espidf/tools/cmake/gdbinit.cmake:52 (message):
+  Error while generating esp_rom gdbinit
+Call Stack (most recent call first):
+  /home/aditya/.platformio/packages/framework-espidf/tools/cmake/project.cmake:357 (__generate_gdbinit)
+  /home/aditya/.platformio/packages/framework-espidf/tools/cmake/project.cmake:1006 (__project_info)
+  CMakeLists.txt:4 (project)
+
+

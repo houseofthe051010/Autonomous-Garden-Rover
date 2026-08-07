@@ -1,0 +1,9 @@
+
+
+# Load bootloader symbols
+set confirm off
+    add-symbol-file /home/aditya/Documents/Autonomous-Garden-Rover/bts7960-controller/esp32-p4-idf-uart-test/build/bootloader/bootloader.elf
+set confirm on
+
+# Load application symbols
+file /home/aditya/Documents/Autonomous-Garden-Rover/bts7960-controller/esp32-p4-idf-uart-test/build/esp32_p4_stm32_uart_test.elf

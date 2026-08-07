@@ -1,0 +1,5 @@
+"-specs=/home/aditya/Documents/Autonomous-Garden-Rover/bts7960-controller/esp32-p4-idf-uart-test/build/bootloader/specs/picolibc.specs"
+-mabi=ilp32f
+-march=rv32imafc_zicsr_zifencei_zaamo_zalrsc_xesploop_xespv
+-mtune=esp-base
+-fno-rtti

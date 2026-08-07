@@ -1,0 +1,8 @@
+Command: ninja all
+[1/4] cd /home/aditya/Documents/Autonomous-Garden-Rover/bts7960-controller/esp32-p4-idf-uart-test/build && /tmp/esp32p4-esptool-venv-20260730/bin/python /home/aditya/.platformio/packages/framework-espidf/components/partition_table/check_sizes.py --offset 0x8000 partition --type app /home/aditya/Documents/Autonomous-Garden-Rover/bts7960-controller/esp32-p4-idf-uart-test/build/partition_table/partition-table.bin /home/aditya/Documents/Autonomous-Garden-Rover/bts7960-controller/esp32-p4-idf-uart-test/build/esp32_p4_stm32_uart_test.bin
+esp32_p4_stm32_uart_test.bin binary size 0x359f0 bytes. Smallest app partition is 0x100000 bytes. 0xca610 bytes (79%) free.
+[2/4] Performing build step for 'bootloader'
+[1/1] cd /home/aditya/Documents/Autonomous-Garden-Rover/bts7960-controller/esp32-p4-idf-uart-test/build/bootloader && /tmp/esp32p4-esptool-venv-20260730/bin/python /home/aditya/.platformio/packages/framework-espidf/components/partition_table/check_sizes.py --offset 0x8000 bootloader 0x2000 /home/aditya/Documents/Autonomous-Garden-Rover/bts7960-controller/esp32-p4-idf-uart-test/build/bootloader/bootloader.bin
+Bootloader binary size 0x5c00 bytes. 0x400 bytes (4%) free.
+[3/4] No install step for 'bootloader'
+[4/4] Completed 'bootloader'

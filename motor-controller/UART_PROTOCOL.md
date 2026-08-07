@@ -6,7 +6,10 @@
 - Format: 115200 baud, 8N1
 - Framing: newline-delimited ASCII
 - Ender serial port: GD32 USART1 on PA9/PA10
+- Raspberry Pi 5 port: `/dev/ttyAMA3`, GPIO8 TX and GPIO9 RX
 - ESP32 port: UART2 with GPIO16/GPIO17 auto-orientation
+- ESP32-P4 web controller: UART2 with GPIO27/GPIO47 auto-orientation; open
+  `/steppers` on the P4 AP server
 
 Do not stream individual STEP pulses over UART. A movement command describes the
 requested pulse count and speed; Marlin's hardware timer generates the pulses.
@@ -21,7 +24,7 @@ The Ender board sends a heartbeat every two seconds:
 HB 42
 ```
 
-The ESP32 responds with standard Marlin `M118`:
+The host responds with standard Marlin `M118`:
 
 ```text
 M118 HB_ACK 42
@@ -33,8 +36,8 @@ The Ender confirms the full round trip:
 HB_ACK_OK 42
 ```
 
-The ESP32 link LED is on while valid acknowledgements arrive. It declares the
-round trip down after five seconds without confirmation.
+The clients declare the round trip down after five seconds without confirmation.
+The ESP32 client also drives its link-status LED.
 
 ### Switch state
 
@@ -50,7 +53,7 @@ polarity. Switch reports do not stop normal motion automatically.
 
 ### Move transaction
 
-For `move("X", 3200, 120)`, the ESP32 calculates units from the configured axis
+For `move("X", 3200, 120)`, the host calculates units from the configured axis
 steps-per-unit and sends a relative Marlin transaction similar to:
 
 ```text
@@ -67,13 +70,16 @@ returned by Marlin:
 DRV_DONE 1 X 3200
 ```
 
-The ESP32 checks the transaction ID, axis, and signed step count before marking
+The host checks the transaction ID, axis, and signed step count before marking
 the movement complete.
 
-## MicroPython API
+## Host API
 
-Run [`esp32-micropython/main.py`](esp32-micropython/main.py). Its UART worker runs
-in a background thread and returns control to the `>>>` prompt.
+The Raspberry Pi 5 CPython client is
+[`raspberry-pi/stepper_controller.py`](raspberry-pi/stepper_controller.py). Run it
+with Thonny's Local Python 3 interpreter. The earlier ESP32 MicroPython client is
+[`esp32-micropython/main.py`](esp32-micropython/main.py). Both expose the same
+commands below and run UART reception in a background thread.
 
 ### Move by RPM
 
@@ -141,7 +147,7 @@ caught and printed so they do not terminate link processing.
 
 ## Step conversion
 
-The firmware and ESP32 currently use:
+The firmware and host clients currently use:
 
 | Axis | Configured steps/unit | Units per 3200-step revolution |
 |---|---:|---:|
@@ -182,7 +188,7 @@ The current protocol provides large finite moves, not a true indefinite velocity
 mode:
 
 - Each `move()` contains a finite signed step count.
-- At most eight transactions are tracked by the ESP32 at once.
+- At most eight transactions are tracked by either supplied host client at once.
 - `M400` drains the planner for each transaction, so separate transactions stop
   and accelerate again instead of forming a perfectly continuous stream.
 - Marlin stores each planner block's step count in a 32-bit field and uses
@@ -194,6 +200,30 @@ mode:
 The required rover range of -200 to +200 motor revolutions is comfortably inside
 these limits. True simultaneous, independent, run-until-stopped speeds on all
 four drivers would require a separate timer/phase-accumulator firmware mode.
+
+## Host-side zero, limits, and jogging
+
+The Raspberry Pi client tracks completed open-loop positions for X/Y/Z/E.
+`reset_position(axis)` defines the current location as zero, and
+`set_limits(axis, minimum, maximum)` establishes inclusive host-side bounds.
+Move validation includes already queued targets, so a new transaction is
+rejected before its target crosses a configured bound.
+
+The ESP32-P4 `/steppers` page applies the same model to X/Y/Z. It provides a
+signed step field plus explicit `Move -` and `Move +` commands, separate
+negative and positive limits, reset-zero controls, and finite hold-to-jog
+chunks. Its status API reports driver enable state and the last queued,
+completed, or rejected action so a web control cannot fail silently.
+
+Positions advance only after the matching `DRV_DONE` transaction. A quick
+`M410` can stop between individual step pulses, so axes with interrupted pending
+moves are marked unknown. Reset zero before relying on their software limits
+again.
+
+The rover web server implements hold-to-jog by sending one small finite chunk,
+waiting for its completion, and then sending the next while browser keepalives
+continue. This preserves position accounting and bounds but can pause between
+chunks because every transaction includes `M400`.
 
 ## Driver and mechanical limits
 

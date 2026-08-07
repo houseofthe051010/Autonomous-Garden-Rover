@@ -34,8 +34,12 @@ UART_RX_GPIO = 1
 UART_TIMEOUT_S = 0.10
 COMMAND_TIMEOUT_S = 1.0
 STATUS_INTERVAL_S = 0.40
+SERVICE_REPLY_TIMEOUT_S = 0.25
 LINK_TIMEOUT_S = 3.0
+MAX_RX_LINE_BYTES = 256
 PWM_MAX_DUTY = 4095
+ENCODER_RATES_HZ = (10, 20, 25, 50, 100)
+DEFAULT_ENCODER_RATE_HZ = 50
 
 
 def _new_motor_state():
@@ -73,6 +77,13 @@ class STM32MotorController:
         self.heartbeat_ms = None
         self.heartbeat_count = 0
         self.status_count = 0
+        self.encoder_count = 0
+        self.encoder_dropped = 0
+        self.encoder_sequence = None
+        self.encoder_stm32_ms = None
+        self.encoder_seen_monotonic = None
+        self.encoder_values = [0, 0, 0, 0]
+        self.encoder_stream_hz = 0
         self.watchdog_stopped = False
         self.motors = [_new_motor_state(), _new_motor_state()]
 
@@ -144,14 +155,21 @@ class STM32MotorController:
         if isinstance(expected_prefixes, str):
             expected_prefixes = (expected_prefixes,)
         expected_prefixes = tuple(expected_prefixes)
+        timeout_s = float(timeout_s)
 
-        with self._command_lock:
+        if not self._command_lock.acquire(timeout=max(0.05, timeout_s)):
+            message = "UART busy before {!r}".format(line)
+            with self._state_lock:
+                self.last_error = message
+            raise TimeoutError(message)
+
+        try:
             with self._reply_condition:
                 self._pending_prefixes = expected_prefixes
                 self._pending_reply = None
             self._write_line(line)
 
-            deadline = time.monotonic() + float(timeout_s)
+            deadline = time.monotonic() + timeout_s
             with self._reply_condition:
                 while self._pending_reply is None and not self._stop_event.is_set():
                     remaining = deadline - time.monotonic()
@@ -170,11 +188,16 @@ class STM32MotorController:
             if reply.startswith("ERR "):
                 raise RuntimeError(reply)
             return reply
+        finally:
+            with self._reply_condition:
+                self._pending_prefixes = None
+                self._pending_reply = None
+            self._command_lock.release()
 
     def _reader_loop(self):
         while not self._stop_event.is_set():
             try:
-                raw = self.port.readline()
+                raw = self.port.read_until(b"\n", MAX_RX_LINE_BYTES)
                 if not raw:
                     continue
                 line = raw.decode("ascii", "replace").strip()
@@ -205,9 +228,17 @@ class STM32MotorController:
                         self.last_seen_monotonic = now
             elif line.startswith("READY "):
                 self.last_seen_monotonic = now
+                self.encoder_stream_hz = 0
+                self.encoder_sequence = None
             elif line.startswith("MSTAT "):
                 if self._parse_mstat_locked(line):
                     self.status_count += 1
+                    self.last_seen_monotonic = now
+                    self.last_error = ""
+            elif line.startswith("ENC "):
+                if self._parse_encoder_locked(line):
+                    self.encoder_count += 1
+                    self.encoder_seen_monotonic = now
                     self.last_seen_monotonic = now
                     self.last_error = ""
             elif line.startswith("FAULT "):
@@ -220,6 +251,13 @@ class STM32MotorController:
             elif line.startswith(("OK ", "CAPS ")):
                 self.last_seen_monotonic = now
                 self.last_error = ""
+                if line.startswith("OK ENCON "):
+                    try:
+                        self.encoder_stream_hz = int(line.split()[2])
+                    except (IndexError, ValueError):
+                        self.last_error = "Malformed ENCON response: " + line
+                elif line == "OK ENCOFF":
+                    self.encoder_stream_hz = 0
 
             became_alive = not was_alive and self._alive_locked(now)
 
@@ -253,6 +291,31 @@ class STM32MotorController:
             return False
         return True
 
+    def _parse_encoder_locked(self, line):
+        fields = line.split()
+        if len(fields) != 7 or fields[0] != "ENC":
+            self.last_error = "Malformed ENC: " + line
+            return False
+        try:
+            sequence = int(fields[1])
+            stm32_ms = int(fields[2])
+            values = [int(value) for value in fields[3:7]]
+        except ValueError:
+            self.last_error = "Malformed numeric ENC field: " + line
+            return False
+        if any(value < 0 or value > 4095 for value in values):
+            self.last_error = "ENC ADC value outside 0..4095: " + line
+            return False
+        if self.encoder_sequence is not None:
+            expected = (self.encoder_sequence + 1) & 0xFFFFFFFF
+            missing = (sequence - expected) & 0xFFFFFFFF
+            if missing < 0x80000000:
+                self.encoder_dropped += missing
+        self.encoder_sequence = sequence
+        self.encoder_stm32_ms = stm32_ms
+        self.encoder_values = values
+        return True
+
     def _alive_locked(self, now=None):
         if self.last_seen_monotonic is None:
             return False
@@ -269,7 +332,7 @@ class STM32MotorController:
             if now >= next_poll:
                 next_poll = now + STATUS_INTERVAL_S
                 try:
-                    self.command("MSTATUS", ("MSTAT",), 0.8)
+                    self.command("MSTATUS", ("MSTAT",), SERVICE_REPLY_TIMEOUT_S)
                 except (TimeoutError, RuntimeError, OSError, serial.SerialException):
                     pass
 
@@ -288,12 +351,24 @@ class STM32MotorController:
                 if self.last_seen_monotonic is None
                 else round((time.monotonic() - self.last_seen_monotonic) * 1000)
             )
+            encoder_age_ms = (
+                None
+                if self.encoder_seen_monotonic is None
+                else round((time.monotonic() - self.encoder_seen_monotonic) * 1000)
+            )
             return {
                 "alive": self._alive_locked(),
                 "age_ms": age_ms,
                 "heartbeat_ms": self.heartbeat_ms,
                 "heartbeat_count": self.heartbeat_count,
                 "status_count": self.status_count,
+                "encoder_count": self.encoder_count,
+                "encoder_dropped": self.encoder_dropped,
+                "encoder_age_ms": encoder_age_ms,
+                "encoder_sequence": self.encoder_sequence,
+                "encoder_stm32_ms": self.encoder_stm32_ms,
+                "encoder_values": list(self.encoder_values),
+                "encoder_stream_hz": self.encoder_stream_hz,
                 "watchdog_stopped": self.watchdog_stopped,
                 "last_line": self.last_line,
                 "last_error": self.last_error,
@@ -304,12 +379,14 @@ class STM32MotorController:
 controller = None
 
 
-def connect(device=UART_DEVICE, baudrate=UART_BAUD):
-    """Connect or reconnect using a Linux serial device and baud rate."""
+def connect(device=UART_DEVICE, baudrate=UART_BAUD, verify=True):
+    """Open the UART and optionally verify a complete STM32 round trip."""
     global controller
     if controller is not None:
         controller.close()
     controller = STM32MotorController(device, baudrate).start()
+    if verify:
+        check_connection()
     return controller
 
 
@@ -328,6 +405,19 @@ def _link():
 
 def ping():
     return _link().command("PING", ("OK PONG",))
+
+
+def check_connection(timeout_s=2.0):
+    """Verify Pi TX, STM32 RX, STM32 TX, and Pi RX with PING/PONG."""
+    try:
+        reply = _link().command("PING", ("OK PONG",), float(timeout_s))
+    except (TimeoutError, RuntimeError, OSError, serial.SerialException) as exc:
+        print("STM32 UART ROUND TRIP FAILED: {}".format(exc))
+        print("Expected: Pi GPIO0 TX -> STM32 PA10 RX")
+        print("          Pi GPIO1 RX <- STM32 PA9 TX, with common GND")
+        return False
+    print("STM32 UART ROUND TRIP VERIFIED: {}".format(reply))
+    return True
 
 
 def caps():
@@ -357,6 +447,27 @@ def drive_percent(motor, direction, percent):
         raise ValueError("percent must be from 0 to 100")
     duty = round(percent * PWM_MAX_DUTY / 100.0)
     return drive(motor, direction, duty)
+
+
+def pulse(motor, direction="A", percent=6, seconds=0.5):
+    """Run one motor briefly and always request a stop before returning."""
+    seconds = float(seconds)
+    if seconds <= 0 or seconds > 5:
+        raise ValueError("seconds must be greater than 0 and at most 5")
+    try:
+        reply = drive_percent(motor, direction, percent)
+        print(reply)
+        time.sleep(seconds)
+    finally:
+        try:
+            print(stop_motor(motor))
+        except Exception as exc:
+            # Send an unacknowledged emergency stop even if response matching
+            # failed; the STM32 watchdog remains the final fallback.
+            try:
+                _link()._write_line("MSTOP ALL")
+            finally:
+                print("Stop acknowledgement failed; sent MSTOP ALL: {}".format(exc))
 
 
 def direction_a(motor, duty=1024):
@@ -392,6 +503,44 @@ def read_currents(motor=None):
     if motor not in (1, 2):
         raise ValueError("motor must be 1 or 2")
     return motors[motor - 1]
+
+
+def read_encoders():
+    """Request one PA0..PA3 ADC sample set and return four raw 12-bit values."""
+    _link().command("ENCREAD", ("ENC",))
+    return list(_link().snapshot()["encoder_values"])
+
+
+def encoder_start(rate_hz=DEFAULT_ENCODER_RATE_HZ):
+    """Enable opt-in PA0..PA3 reports at a supported samples-per-second rate."""
+    rate_hz = int(rate_hz)
+    if rate_hz not in ENCODER_RATES_HZ:
+        raise ValueError("rate_hz must be one of {}".format(ENCODER_RATES_HZ))
+    reply = _link().command("ENCON {}".format(rate_hz), ("OK ENCON",))
+    return reply
+
+
+def encoder_stop():
+    """Disable periodic encoder ADC reports; one-shot ENCREAD remains available."""
+    reply = _link().command("ENCOFF", ("OK ENCOFF",))
+    return reply
+
+
+def encoder_status():
+    """Return the latest cached PA0..PA3 ADC report without UART traffic."""
+    snapshot = _link().snapshot()
+    return {
+        "pa0": snapshot["encoder_values"][0],
+        "pa1": snapshot["encoder_values"][1],
+        "pa2": snapshot["encoder_values"][2],
+        "pa3": snapshot["encoder_values"][3],
+        "sequence": snapshot["encoder_sequence"],
+        "stm32_ms": snapshot["encoder_stm32_ms"],
+        "reports": snapshot["encoder_count"],
+        "dropped": snapshot["encoder_dropped"],
+        "age_ms": snapshot["encoder_age_ms"],
+        "rate_hz": snapshot["encoder_stream_hz"],
+    }
 
 
 def status():
@@ -436,18 +585,22 @@ def monitor(seconds=10, interval=0.5):
 
 def show_help():
     print("Raspberry Pi -> STM32 dual BTS7960 commands:")
-    print("  ping() | caps() | status() | read_currents() | monitor(10)")
+    print("  check_connection() | ping() | caps() | status()")
+    print("  read_currents() | monitor(10)")
+    print("  read_encoders() | encoder_start(50) | encoder_status() | encoder_stop()")
     print("  direction_a(1, 1024) | direction_b(2, 2048)")
     print("  drive(1, 'A', 4095) | drive_percent(2, 'B', 25)")
+    print("  pulse(1, 'A', 6, 0.5)  # run briefly, then stop")
     print("  stop_motor(1) | stop_all() | reset_motors()")
     print("  connect('/dev/ttyAMA1', 115200) | disconnect()")
     print("Direction A/B must be identified safely for each motor before renaming.")
 
 
-try:
-    connect()
-except (OSError, serial.SerialException) as exc:
-    print("STM32 UART not opened: {}".format(exc))
-    print("Complete the UART setup, then call connect().")
+if __name__ == "__main__":
+    try:
+        connect()
+    except (OSError, serial.SerialException) as exc:
+        print("STM32 UART not opened: {}".format(exc))
+        print("Complete the UART setup, then call connect().")
 
-show_help()
+    show_help()

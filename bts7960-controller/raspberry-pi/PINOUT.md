@@ -40,18 +40,18 @@ protocol. GPIO8/GPIO9 cannot simultaneously be used for their normal SPI0
 functions. Confirm the GD32 board model and firmware pin assignment before
 connecting it. Do not power an unknown GD32 board from the Pi 5 V rail.
 
-## Proposed BNO080 UART-SHTP
+## Validated BNO080 UART-SHTP connection
 
 | Raspberry Pi 5 | BNO080 label/function | Purpose |
 | --- | --- | --- |
-| GPIO4, physical 7, UART2 TX | RX / SCL-RX | Pi commands to BNO080 |
-| GPIO5, physical 29, UART2 RX | TX / SDA-TX | Sensor reports to Pi |
+| GPIO12, physical 32, UART4 TX | RX / SCL-RX | Pi commands to BNO080 |
+| GPIO13, physical 33, UART4 RX | TX / SDA-TX | Sensor reports to Pi |
 | GPIO22, physical 15, input | H_INTN | Active-low data interrupt/timestamp |
 | GPIO23, physical 16, output | NRST | Sensor reset control |
 | 3V3, physical 17 | VDD/VIN only if the board accepts 3.3 V | Sensor power |
 | GND, physical 9 | GND | Common logic ground |
 
-UART2 appears as `/dev/ttyAMA2`. UART-SHTP is fixed at 3,000,000 baud, 8N1.
+UART4 appears as `/dev/ttyAMA4`. UART-SHTP is fixed at 3,000,000 baud, 8N1.
 Select UART-SHTP mode with PS1 high and PS0 low during reset. Some breakout
 boards provide solder jumpers or switches for these mode pins.
 
@@ -60,16 +60,18 @@ A bare BNO080 is a 3.3 V-class device; a breakout marked `VIN` may include a
 regulator, but that must be verified from that board's schematic. UART logic
 must remain 3.3 V regardless.
 
-## Reserved fourth UART
+## Validated ODESC UART connection
 
-| Raspberry Pi 5 | Future device | Purpose |
+| Raspberry Pi 5 | ODESC | Purpose |
 | --- | --- | --- |
-| GPIO12, physical 32, UART4 TX | Device RX | Pi transmit |
-| GPIO13, physical 33, UART4 RX | Device TX | Pi receive |
-| Any available GND | Device GND | Common logic ground |
+| GPIO4, physical 7, UART2 TX | GPIO2 / UART RX | ODrive ASCII commands |
+| GPIO5, physical 29, UART2 RX | GPIO1 / UART TX | Replies and status |
+| Any available GND | GND | Common logic ground |
 
-UART4 appears as `/dev/ttyAMA4`. GPIO12/GPIO13 cannot simultaneously be used
-for PWM0. Pi 5 UART0 on GPIO14/GPIO15 remains unused as one more possible UART.
+UART2 appears as `/dev/ttyAMA2` and runs at 115200 baud. The bidirectional ODESC
+property-read test was hardware-validated on 2026-07-22. See the
+[`ODESC working model`](../../odesc/raspberry-pi/VALIDATED_WORKING_MODEL.md).
+Pi 5 UART0 on GPIO14/GPIO15 remains unused as one more possible UART.
 
 ## Device Tree configuration
 
@@ -80,13 +82,13 @@ Add only the interfaces that are actually wired under `[all]` in
 # Existing STM32 motor controller
 dtoverlay=uart1-pi5
 
-# Add when the BNO080 is connected
+# Validated ODESC motor controller
 dtoverlay=uart2-pi5
 
 # Add when the GD32 is connected
 dtoverlay=uart3-pi5
 
-# Add when the future fourth UART device is connected
+# Current BNO080 UART-SHTP connection
 dtoverlay=uart4-pi5
 ```
 
