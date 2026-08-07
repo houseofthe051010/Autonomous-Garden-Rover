@@ -1,108 +1,108 @@
 # Autonomous Garden Rover
 
-An autonomous garden-management rover intended to water plants and cut grass.
+Open-source firmware and hardware documentation for an experimental autonomous
+garden rover. The current controller is a Waveshare ESP32-P4 board with its
+onboard ESP32-C6 providing Wi-Fi. It coordinates the drive motors, stepper
+axes, audio, storage, and handheld/web controls.
 
-## System architecture
+> [!WARNING]
+> This is prototype robotics software, not a certified safety system. Test with
+> wheels raised, mechanisms clear, and an independent power disconnect within
+> reach. Review every pin assignment before powering motor hardware.
 
-The current stepper-control host is an ESP32-P4. It controls a repurposed
-Ender-3 v4.2.2 mainboard used as a four-channel stepper motor controller.
+## System overview
 
 ```text
-ESP32-P4 robot control firmware
-       |
-       | 115200 baud, 3.3 V UART
-       v
-Ender-3 v4.2.2 board (GD32F303RET6)
-       |
-       +-- X stepper driver
-       +-- Y stepper driver
-       +-- Z stepper driver
-       +-- E stepper driver
-       |
-       +-- X/Y/Z switch inputs -> status returned to ESP32-P4
+Phone or handheld controller
+        |
+        | Wi-Fi / HTTP
+        v
+Waveshare ESP32-P4 + ESP32-C6       microSD / speaker / microphone
+        |
+        +-- UART --> STM32F103 --> two BTS7960 drive channels
+        |
+        +-- UART --> GD32F303 Ender-3 board --> X/Y/Z stepper axes
+
+Handheld controller -- ESP-NOW --> ESP32 hose-valve controller
 ```
 
-The GD32 board generates accurately timed STEP and DIR signals. The ESP32-P4 sends
-motion commands and receives heartbeat, completion, and switch-status messages.
-UART sends commands, not individual step pulses, so normal motor operation does
-not depend on streaming individual pulses from the ESP32-P4. Earlier Raspberry
-Pi and ESP32 clients remain in the repository as validated reference models.
+The ESP32-P4 firmware is the supported host implementation. The earlier
+Raspberry Pi 5 host and commissioning programs are retained under
+[`legacy/`](legacy/README.md) as reference implementations.
 
 ## Repository layout
 
-- [`motor-controller/`](motor-controller/README.md): hardware wiring, limitations,
-  resources, and system-level operating notes.
-- [`motor-controller/UART_PROTOCOL.md`](motor-controller/UART_PROTOCOL.md): wire
-  protocol, host API, motion units, and examples.
-- [`motor-controller/raspberry-pi/`](motor-controller/raspberry-pi/README.md):
-  Raspberry Pi 5 `/dev/ttyAMA3` Thonny client, wiring, and setup.
-- [`motor-controller/esp32-p4-gd32-direct-motion/`](motor-controller/esp32-p4-gd32-direct-motion/README.md):
-  ESP32-P4 handoff for simultaneous joystick velocity control, independent
-  counted moves, UART timing, firmware, and reproducible GD32 source patch.
-- [`Validated GD32 UART model`](motor-controller/raspberry-pi/VALIDATED_WORKING_MODEL.md):
-  dated working Pi 5 UART, GD32 heartbeat, and Z-stepper configuration for later
-  integration into the multi-UART rover controller.
-- [`motor-controller/esp32-micropython/`](motor-controller/esp32-micropython/README.md):
-  alternative ESP32 MicroPython controller source and deployment notes.
-- [`motor-controller/ender3-firmware/`](motor-controller/ender3-firmware/README.md):
-  flashable Ender firmware, checksum, source patch, and reproducible build steps.
-- [`bts7960-controller/`](bts7960-controller/raspberry-pi/README.md): Raspberry
-  Pi 5/Thonny UART client and protocol for the separate STM32 dual-BTS7960
-  drive controller, including current-sense telemetry.
-- [`Raspberry Pi 5 pinout`](bts7960-controller/raspberry-pi/PINOUT.md): current
-  XL4005/STM32/BNO080 wiring plus planned GD32 and expansion UART allocation.
-- [`Validated STM32 UART model`](bts7960-controller/raspberry-pi/VALIDATED_WORKING_MODEL.md):
-  dated working Pi 5 UART and BTS7960 motor-control configuration, verification
-  evidence, test commands, and remaining calibration work.
-- [`STM32 controller firmware`](bts7960-controller/stm32-firmware/README.md):
-  buildable PlatformIO source, binary artifact, analog encoder telemetry, and
-  future Raspberry Pi UART flashing notes.
-- [`ESP32-P4 STM32 UART test`](bts7960-controller/esp32-p4-micropython/README.md):
-  standalone MicroPython/Thonny client for GPIO21/GPIO22 with heartbeat-first
-  TX/RX orientation detection and verified PING/PONG.
-- [`ESP32-P4 rover web and handheld control`](bts7960-controller/esp32-p4-stm32-ap/README.md):
-  deployed AP/router web interface, mobile tank joystick, ramped dual-track
-  control, authenticated handheld-controller Wi-Fi protocol, OTA, onboard
-  speaker sound management, STM32, and GD32 integration.
-- [`ESP32 hose valve controller`](hose-controller/esp32-hose-espnow/README.md):
-  GPIO14 continuous-servo control, GPIO35 multi-turn potentiometer tracking,
-  ESP-NOW protocol, watchdog behavior, wiring, and measured bench validation.
-- [`BNO080 UART-SHTP client`](bno080/raspberry-pi/README.md): Pi 5 UART4 setup,
-  Thonny client, fused heading/vector output, raw logging, and calibration API.
-- [`Validated BNO080 UART model`](bno080/raspberry-pi/VALIDATED_WORKING_MODEL.md):
-  dated working Pi 5 UART-SHTP round trip, fused sensor-report evidence, wiring,
-  and remaining magnetometer calibration work.
-- [`ODESC UART client`](odesc/raspberry-pi/README.md): validated Pi 5 UART2
-  wiring, ODrive ASCII protocol test client, and integration notes.
-- [`Validated ODESC UART model`](odesc/raspberry-pi/VALIDATED_WORKING_MODEL.md):
-  dated working GPIO4/GPIO5 round trip, saved UART configuration, and observed
-  ODESC status values.
-- [`Combined four-UART shell`](robot/raspberry-pi/README.md): one standalone,
-  directly pasteable Pi 5/Thonny controller for STM32, ODESC, GD32, and BNO08X
-  commissioning, plus the deployed mobile tank-drive LAN dashboard and boot
-  service.
-- [`Recommended robot architecture`](robot/ARCHITECTURE.md): ROS 2, sensor
-  fusion, vision, navigation, future encoder/GPS integration, and safety stages.
+| Path | Status | Purpose |
+| --- | --- | --- |
+| [`firmware/esp32-p4/`](firmware/esp32-p4/README.md) | Primary | ESP-IDF rover host, web UI, Wi-Fi/OTA, UART links, audio, and storage |
+| [`firmware/stm32-drive/`](firmware/stm32-drive/README.md) | Active | STM32F103 dual-BTS7960 drive controller and telemetry |
+| [`firmware/gd32-stepper/`](firmware/gd32-stepper/README.md) | Active | GD32F303/Ender-3 simultaneous X/Y/Z stepper firmware |
+| [`firmware/esp32-hose/`](firmware/esp32-hose/README.md) | Active | ESP32 hose-valve actuator and position tracking |
+| [`docs/`](docs/README.md) | Reference | Architecture, wiring, protocols, and safety notes |
+| [`legacy/raspberry-pi/`](legacy/raspberry-pi/README.md) | Legacy | Raspberry Pi 5 multi-UART controller and device clients |
+| [`legacy/prototypes/`](legacy/prototypes/README.md) | Legacy | Commissioning tools and superseded firmware variants |
 
-## Current motor-controller status
+## Primary firmware quick start
 
-- Hardware-validated Pi 5/GD32 UART round trip and 4,000-step Z movement.
-- Hardware-validated Pi 5/BNO080 UART-SHTP round trip and fused sensor reports.
-- Hardware-validated Pi 5/ODESC UART2 ASCII property-read round trip.
-- Controls X, Y, Z, and E driver STEP/DIR behavior over UART.
-- Supports signed finite moves in driver microsteps, RPM, or steps per second.
-- Reports debounced X/Y/Z switch state changes to the host.
-- Provides heartbeat and tagged move-completion responses.
-- Provides an emergency `M410` stop command.
-- Supports at least 200 motor revolutions in either direction per command.
-- Does not provide true indefinite, independently timed four-motor velocity mode.
-  See [Motion limits](motor-controller/UART_PROTOCOL.md#motion-limits).
+The ESP32-P4 project requires ESP-IDF 6.0 or newer. Component dependencies are
+declared in `main/idf_component.yml` and resolved by the IDF component manager.
 
-## Safety scope
+```sh
+cd firmware/esp32-p4
+cp main/rover_control_key.example.h main/rover_control_key.h
+# Edit rover_control_key.h with a private 32-byte controller key.
+idf.py set-target esp32p4
+idf.py build
+idf.py flash monitor
+```
 
-This is dedicated stepper-tester/rover firmware. Heater temperature sensing and
-thermal protection are intentionally disabled because the rover does not use the
-printer heaters. Do not connect or operate a hotend or heated bed with this build.
+Do not commit `main/rover_control_key.h`, Wi-Fi credentials, device backups, or
+build output. The project-level and repository-level ignore rules exclude them.
+See the [ESP32-P4 firmware guide](firmware/esp32-p4/README.md) for board-specific
+flashing, wiring, web routes, OTA, and recovery instructions.
 
-The X/Y/Z switch messages are telemetry. They do not automatically stop ordinary
-motion. Rover control code must decide how switch events affect movement.
+The STM32 controller uses PlatformIO:
+
+```sh
+cd firmware/stm32-drive
+pio run
+pio run --target upload
+```
+
+The GD32 firmware is distributed as a reproducible Marlin patch plus a checked
+flash image because its Creality bootloader is updated by microSD. See
+[`firmware/gd32-stepper/README.md`](firmware/gd32-stepper/README.md).
+
+## Interfaces
+
+The installed UART mapping and electrical constraints are documented in the
+[hardware overview](docs/hardware/README.md). Protocol details live in
+[`docs/protocols/`](docs/protocols/README.md) and beside firmware when the
+protocol is tightly coupled to that target.
+
+All MCU UART signals are 3.3 V logic. UART TX must connect to the receiving
+device's RX, every device must share signal ground, and motor/servo loads need
+appropriately sized external power supplies.
+
+## Project status
+
+This repository records a hardware-validated prototype, but not every subsystem
+has the same maturity. The ESP32-P4, STM32 drive link, GD32 stepper link, web
+control, microSD audio, and hose-controller paths have been exercised on the
+installed hardware. Sensor fusion, autonomous navigation, and ODESC integration
+remain experimental or future work. Individual READMEs state their validation
+status and known limitations.
+
+## Contributing
+
+Read [`CONTRIBUTING.md`](CONTRIBUTING.md) before opening a change. Keep hardware
+tests bounded, document the exact board and wiring used, and never publish
+credentials or device-specific control keys. Security and safety reports are
+covered by [`SECURITY.md`](SECURITY.md).
+
+## License
+
+Original code and documentation in this repository are licensed under the
+[MIT License](LICENSE). Third-party components, patches, and derived firmware
+remain subject to their upstream licenses; relevant notices are retained next
+to those files and under [`LICENSES/`](LICENSES/).

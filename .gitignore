@@ -1,0 +1,41 @@
+# Editors and operating systems
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# ESP-IDF and CMake
+build/
+managed_components/
+sdkconfig
+sdkconfig.old
+CMakeCache.txt
+CMakeFiles/
+compile_commands.json
+
+# PlatformIO
+.pio/
+
+# Local credentials and device material
+**/rover_control_key.h
+*.pem
+*.key
+*.crt
+.env
+.env.*
+!.env.example
+
+# Hardware backups and local captures
+*-factory-backup*.bin
+*.log
+*.pcap
+*.pcapng
