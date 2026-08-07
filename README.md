@@ -1,16 +1,10 @@
 # Autonomous Garden Rover
 
-Open-source firmware and hardware documentation for an experimental autonomous
-garden rover. The current controller is a Waveshare ESP32-P4 board with its
-onboard ESP32-C6 providing Wi-Fi. It coordinates the drive motors, stepper
-axes, audio, storage, and handheld/web controls.
+This is my prototype garden rover: a mobile platform for carrying tools, moving a hose, and eventually navigating between garden beds on its own. The current version can be driven from a phone or handheld controller and has separate controllers for its drivetrain, stepper mechanisms, and hose valve.
 
-> [!WARNING]
-> This is prototype robotics software, not a certified safety system. Test with
-> wheels raised, mechanisms clear, and an independent power disconnect within
-> reach. Review every pin assignment before powering motor hardware.
+The main controller is a Waveshare ESP32-P4. Its onboard ESP32-C6 provides Wi-Fi, while UART links connect the drivetrain and stepper controllers.
 
-## System overview
+## How it works
 
 ```text
 Phone or handheld controller
@@ -26,83 +20,64 @@ Waveshare ESP32-P4 + ESP32-C6       microSD / speaker / microphone
 Handheld controller -- ESP-NOW --> ESP32 hose-valve controller
 ```
 
-The ESP32-P4 firmware is the supported host implementation. The earlier
-Raspberry Pi 5 host and commissioning programs are retained under
-[`legacy/`](legacy/README.md) as reference implementations.
+The ESP32-P4 runs the web interface and coordinates the rover. The STM32 handles the two drive channels, the repurposed Ender-3 controller runs three NEMA 17 axes, and a separate ESP32 controls the hose valve. The older Raspberry Pi controller is kept in [`legacy/`](legacy/README.md) for reference.
 
-## Repository layout
+## Bill of materials
 
-| Path | Status | Purpose |
-| --- | --- | --- |
-| [`firmware/esp32-p4/`](firmware/esp32-p4/README.md) | Primary | ESP-IDF rover host, web UI, Wi-Fi/OTA, UART links, audio, and storage |
-| [`firmware/stm32-drive/`](firmware/stm32-drive/README.md) | Active | STM32F103 dual-BTS7960 drive controller and telemetry |
-| [`firmware/gd32-stepper/`](firmware/gd32-stepper/README.md) | Active | GD32F303/Ender-3 simultaneous X/Y/Z stepper firmware |
-| [`firmware/esp32-hose/`](firmware/esp32-hose/README.md) | Active | ESP32 hose-valve actuator and position tracking |
-| [`docs/`](docs/README.md) | Reference | Architecture, wiring, protocols, and safety notes |
-| [`legacy/raspberry-pi/`](legacy/raspberry-pi/README.md) | Legacy | Raspberry Pi 5 multi-UART controller and device clients |
-| [`legacy/prototypes/`](legacy/prototypes/README.md) | Legacy | Commissioning tools and superseded firmware variants |
+| Item | Qty. | Unit price | Shipping | Line total | Link |
+| --- | ---: | ---: | ---: | ---: | --- |
+| Waveshare ESP32-P4-WIFI6 development board | 1 | $26.87 | $0.00 | $26.87 | [Amazon](https://www.amazon.com/dp/B0FM3SPXZG) |
+| Steelworks 3/4 in × 8 ft aluminum channel | 2 | $19.98 | $0.00 | $39.96 | [Lowe's](https://www.lowes.com/pd/Steelworks-3-4-in-W-x-8-ft-L-Mill-Finished-Aluminum-Weldable-Trim-Channel/3058185) |
+| LGXSHOP C6374 170KV sensored BLDC motor | 1 | $29.50 | $10.00 | $39.50 | [Amazon](https://www.amazon.com/dp/B0GR88K1XP) |
+| STM32F103C6T6 Blue Pill development board | 1 | $1.75 | $0.00 | $1.75 | [AliExpress](https://www.aliexpress.us/item/3256809531654480.html) |
+| BTS7960 high-current motor driver board | 2 | $5.56 | $0.00 | $11.12 | [AliExpress](https://www.aliexpress.us/item/3256812145540065.html) |
+| DS3230 PRO drivetrain servo motor | 1 | $51.37 | $0.00 | $51.37 | [AliExpress](https://www.aliexpress.us/item/3256808314550897.html) |
+| STEPPERONLINE NEMA 17 stepper motors (3-pack) | 1 | $25.99 | $0.00 | $25.99 | [Amazon](https://www.amazon.com/dp/B0B38GHRH8) |
+| Arduino Nano + A4988 stepper-controller kit | 1 | $8.76 | $0.00 | $8.76 | [AliExpress](https://www.aliexpress.us/item/3256805832366199.html) |
+| Flipsky ODESC v4.2 24 V single-axis controller | 1 | $39.99 | $0.00 | $39.99 | [Amazon](https://www.amazon.com/dp/B0CB64MVHC) |
+| **Estimated total** |  |  |  | **$245.31** | |
 
-## Primary firmware quick start
+The machine-readable version is in [`bom.csv`](bom.csv). Prices were checked on August 7, 2026 and are before tax. Shipping is only included where it was known. Amazon did not have an ODESC v3.6 under $40, so the BOM uses the cheapest in-stock ODESC listing I found: the $39.99 Flipsky v4.2 24 V single-axis board. It is intended for the experimental BLDC path; the current dual drive controller uses the STM32 and BTS7960 boards.
 
-The ESP32-P4 project requires ESP-IDF 6.0 or newer. Component dependencies are
-declared in `main/idf_component.yml` and resolved by the IDF component manager.
+## Firmware
+
+The main ESP32-P4 firmware uses ESP-IDF 6.0 or newer:
 
 ```sh
 cd firmware/esp32-p4
 cp main/rover_control_key.example.h main/rover_control_key.h
-# Edit rover_control_key.h with a private 32-byte controller key.
+# Add a private 32-byte controller key to rover_control_key.h.
 idf.py set-target esp32p4
 idf.py build
 idf.py flash monitor
 ```
 
-Do not commit `main/rover_control_key.h`, Wi-Fi credentials, device backups, or
-build output. The project-level and repository-level ignore rules exclude them.
-See the [ESP32-P4 firmware guide](firmware/esp32-p4/README.md) for board-specific
-flashing, wiring, web routes, OTA, and recovery instructions.
-
-The STM32 controller uses PlatformIO:
+The STM32 drive controller uses PlatformIO:
 
 ```sh
 cd firmware/stm32-drive
-pio run
 pio run --target upload
 ```
 
-The GD32 firmware is distributed as a reproducible Marlin patch plus a checked
-flash image because its Creality bootloader is updated by microSD. See
-[`firmware/gd32-stepper/README.md`](firmware/gd32-stepper/README.md).
+The Ender-3/GD32 stepper firmware is flashed by microSD. Its build and flashing notes are in the [GD32 firmware guide](firmware/gd32-stepper/README.md). More detailed pinouts and protocol notes are under [`docs/`](docs/README.md).
 
-## Interfaces
+## Repository map
 
-The installed UART mapping and electrical constraints are documented in the
-[hardware overview](docs/hardware/README.md). Protocol details live in
-[`docs/protocols/`](docs/protocols/README.md) and beside firmware when the
-protocol is tightly coupled to that target.
+| Folder | Contents |
+| --- | --- |
+| [`firmware/esp32-p4/`](firmware/esp32-p4/README.md) | Main rover controller, web UI, Wi-Fi, audio, storage, and UART links |
+| [`firmware/stm32-drive/`](firmware/stm32-drive/README.md) | Dual-BTS7960 drivetrain controller |
+| [`firmware/gd32-stepper/`](firmware/gd32-stepper/README.md) | Three-axis stepper firmware for the Ender-3 controller |
+| [`firmware/esp32-hose/`](firmware/esp32-hose/README.md) | Hose-valve controller |
+| [`docs/`](docs/README.md) | Wiring, architecture, protocols, and safety notes |
+| [`legacy/`](legacy/README.md) | Earlier Raspberry Pi code and test programs |
 
-All MCU UART signals are 3.3 V logic. UART TX must connect to the receiving
-device's RX, every device must share signal ground, and motor/servo loads need
-appropriately sized external power supplies.
+## Current status
 
-## Project status
+The ESP32-P4 host, STM32 drive link, GD32 stepper link, web controls, microSD audio, and hose-control path have been tested on their intended hardware. Autonomous navigation, sensor fusion, and ODESC integration are still experimental.
 
-This repository records a hardware-validated prototype, but not every subsystem
-has the same maturity. The ESP32-P4, STM32 drive link, GD32 stepper link, web
-control, microSD audio, and hose-controller paths have been exercised on the
-installed hardware. Sensor fusion, autonomous navigation, and ODESC integration
-remain experimental or future work. Individual READMEs state their validation
-status and known limitations.
-
-## Contributing
-
-Read [`CONTRIBUTING.md`](CONTRIBUTING.md) before opening a change. Keep hardware
-tests bounded, document the exact board and wiring used, and never publish
-credentials or device-specific control keys. Security and safety reports are
-covered by [`SECURITY.md`](SECURITY.md).
+This is prototype robotics hardware. Test it with the wheels raised, keep clear of moving mechanisms, verify every pin before applying power, and keep an independent power disconnect within reach.
 
 ## License
 
-Original code and documentation in this repository are licensed under the
-[MIT License](LICENSE). Third-party components, patches, and derived firmware
-remain subject to their upstream licenses; relevant notices are retained next
-to those files and under [`LICENSES/`](LICENSES/).
+My original code and documentation are released under the [MIT License](LICENSE). The Marlin-derived stepper patches and binaries keep their upstream GPL license under [`LICENSES/`](LICENSES/).
