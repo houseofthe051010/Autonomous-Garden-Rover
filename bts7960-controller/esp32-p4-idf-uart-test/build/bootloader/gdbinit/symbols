@@ -1,9 +1,0 @@
-
-
-# Load bootloader symbols
-set confirm off
-    # Bootloader elf was not found
-set confirm on
-
-# Load application symbols
-file /home/aditya/Documents/Autonomous-Garden-Rover/bts7960-controller/esp32-p4-idf-uart-test/build/bootloader/bootloader.elf

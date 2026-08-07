@@ -1,0 +1,3 @@
+# Generated PlatformIO and ESP-IDF output
+.pio/
+bts7960-controller/esp32-p4-idf-uart-test/build/
