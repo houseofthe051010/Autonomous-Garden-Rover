@@ -1,0 +1,298 @@
+[         0 boot+       0.096 reset=3 epoch_ms=1786408405680] BOOT ODESC logger initialized (256-record RAM ring)
+[         1 boot+       0.147 reset=3 epoch_ms=1786408405731] LINK connected VBUS 36.114 V
+[         2 boot+       0.096 reset=3 epoch_ms=1786408571001] BOOT ODESC logger initialized (256-record RAM ring)
+[         3 boot+       0.147 reset=3 epoch_ms=1786408571052] LINK connected VBUS 36.096 V
+[         4 boot+    3931.698 reset=3 epoch_ms=1786412502603] HANDHELD START MOWER 9.2 turns/s
+[         5 boot+    3941.351 reset=3 epoch_ms=1786412512256] RX timeout attempt 2: r axis0.motor.current_control.Iq_measured
+[         6 boot+    3942.708 reset=3 epoch_ms=1786412513613] DEADMAN expired axis=0
+[         7 boot+    3944.047 reset=3 epoch_ms=1786412514952] RX timeout attempt 2: r vbus_voltage
+[         8 boot+    3946.703 reset=3 epoch_ms=1786412517608] RX timeout attempt 2: r axis0.current_state
+[         9 boot+    3948.032 reset=3 epoch_ms=1786412518937] LINK timeout failures=1 reply_age=8015 ms
+[        10 boot+    3949.424 reset=3 epoch_ms=1786412520329] RX timeout attempt 2: r vbus_voltage
+[        11 boot+    3950.751 reset=3 epoch_ms=1786412521656] LINK probe failed TX27 RX47
+[        12 boot+    3953.318 reset=3 epoch_ms=1786412524223] RX timeout attempt 2: r vbus_voltage
+[        13 boot+    3954.645 reset=3 epoch_ms=1786412525550] LINK probe failed TX27 RX47
+[        14 boot+    3957.212 reset=3 epoch_ms=1786412528117] RX timeout attempt 2: r vbus_voltage
+[        15 boot+    3958.539 reset=3 epoch_ms=1786412529444] LINK probe failed TX27 RX47
+[        16 boot+    3961.106 reset=3 epoch_ms=1786412532011] RX timeout attempt 2: r vbus_voltage
+[        17 boot+    3962.433 reset=3 epoch_ms=1786412533338] LINK probe failed TX27 RX47
+[        18 boot+    3965.000 reset=3 epoch_ms=1786412535905] RX timeout attempt 2: r vbus_voltage
+[        19 boot+    3966.327 reset=3 epoch_ms=1786412537232] LINK probe failed TX27 RX47
+[        20 boot+    3968.894 reset=3 epoch_ms=1786412539799] RX timeout attempt 2: r vbus_voltage
+[        21 boot+    3970.221 reset=3 epoch_ms=1786412541126] LINK probe failed TX27 RX47
+[        22 boot+    3972.788 reset=3 epoch_ms=1786412543693] RX timeout attempt 2: r vbus_voltage
+[        23 boot+    3974.115 reset=3 epoch_ms=1786412545020] LINK probe failed TX27 RX47
+[        24 boot+    3976.682 reset=3 epoch_ms=1786412547587] RX timeout attempt 2: r vbus_voltage
+[        25 boot+    3978.009 reset=3 epoch_ms=1786412548914] LINK probe failed TX27 RX47
+[        26 boot+    3980.576 reset=3 epoch_ms=1786412551481] RX timeout attempt 2: r vbus_voltage
+[        27 boot+    3981.905 reset=3 epoch_ms=1786412552810] LINK probe failed TX27 RX47
+[        28 boot+    3984.472 reset=3 epoch_ms=1786412555377] RX timeout attempt 2: r vbus_voltage
+[        29 boot+    3985.799 reset=3 epoch_ms=1786412556704] LINK probe failed TX27 RX47
+[        30 boot+    3988.369 reset=3 epoch_ms=1786412559274] RX timeout attempt 2: r vbus_voltage
+[        31 boot+    3989.696 reset=3 epoch_ms=1786412560601] LINK probe failed TX27 RX47
+[        32 boot+    3992.263 reset=3 epoch_ms=1786412563168] RX timeout attempt 2: r vbus_voltage
+[        33 boot+    3993.590 reset=3 epoch_ms=1786412564495] LINK probe failed TX27 RX47
+[        34 boot+    3996.157 reset=3 epoch_ms=1786412567062] RX timeout attempt 2: r vbus_voltage
+[        35 boot+    3997.484 reset=3 epoch_ms=1786412568389] LINK probe failed TX27 RX47
+[        36 boot+    4000.051 reset=3 epoch_ms=1786412570956] RX timeout attempt 2: r vbus_voltage
+[        37 boot+    4001.378 reset=3 epoch_ms=1786412572283] LINK probe failed TX27 RX47
+[        38 boot+    4003.949 reset=3 epoch_ms=1786412574854] RX timeout attempt 2: r vbus_voltage
+[        39 boot+    4005.277 reset=3 epoch_ms=1786412576182] LINK probe failed TX27 RX47
+[        40 boot+    4007.844 reset=3 epoch_ms=1786412578749] RX timeout attempt 2: r vbus_voltage
+[        41 boot+    4009.171 reset=3 epoch_ms=1786412580076] LINK probe failed TX27 RX47
+[        42 boot+    4011.743 reset=3 epoch_ms=1786412582648] RX timeout attempt 2: r vbus_voltage
+[        43 boot+    4013.070 reset=3 epoch_ms=1786412583975] LINK probe failed TX27 RX47
+[        44 boot+    4015.637 reset=3 epoch_ms=1786412586542] RX timeout attempt 2: r vbus_voltage
+[        45 boot+    4016.965 reset=3 epoch_ms=1786412587870] LINK probe failed TX27 RX47
+[        46 boot+    4019.533 reset=3 epoch_ms=1786412590438] RX timeout attempt 2: r vbus_voltage
+[        47 boot+    4020.860 reset=3 epoch_ms=1786412591765] LINK probe failed TX27 RX47
+[        48 boot+    4023.427 reset=3 epoch_ms=1786412594332] RX timeout attempt 2: r vbus_voltage
+[        49 boot+    4024.754 reset=3 epoch_ms=1786412595659] LINK probe failed TX27 RX47
+[        50 boot+    4027.321 reset=3 epoch_ms=1786412598226] RX timeout attempt 2: r vbus_voltage
+[        51 boot+    4028.648 reset=3 epoch_ms=1786412599553] LINK probe failed TX27 RX47
+[        52 boot+    4031.215 reset=3 epoch_ms=1786412602120] RX timeout attempt 2: r vbus_voltage
+[        53 boot+    4032.542 reset=3 epoch_ms=1786412603447] LINK probe failed TX27 RX47
+[        54 boot+    4035.109 reset=3 epoch_ms=1786412606014] RX timeout attempt 2: r vbus_voltage
+[        55 boot+    4036.436 reset=3 epoch_ms=1786412607341] LINK probe failed TX27 RX47
+[        56 boot+    4039.003 reset=3 epoch_ms=1786412609908] RX timeout attempt 2: r vbus_voltage
+[        57 boot+    4040.330 reset=3 epoch_ms=1786412611235] LINK probe failed TX27 RX47
+[        58 boot+    4042.897 reset=3 epoch_ms=1786412613802] RX timeout attempt 2: r vbus_voltage
+[        59 boot+    4044.224 reset=3 epoch_ms=1786412615129] LINK probe failed TX27 RX47
+[        60 boot+    4046.791 reset=3 epoch_ms=1786412617696] RX timeout attempt 2: r vbus_voltage
+[        61 boot+    4048.118 reset=3 epoch_ms=1786412619023] LINK probe failed TX27 RX47
+[        62 boot+    4050.685 reset=3 epoch_ms=1786412621590] RX timeout attempt 2: r vbus_voltage
+[        63 boot+    4052.012 reset=3 epoch_ms=1786412622917] LINK probe failed TX27 RX47
+[        64 boot+    4054.581 reset=3 epoch_ms=1786412625486] RX timeout attempt 2: r vbus_voltage
+[        65 boot+    4055.908 reset=3 epoch_ms=1786412626813] LINK probe failed TX27 RX47
+[        66 boot+    4058.475 reset=3 epoch_ms=1786412629380] RX timeout attempt 2: r vbus_voltage
+[        67 boot+    4059.802 reset=3 epoch_ms=1786412630707] LINK probe failed TX27 RX47
+[        68 boot+    4062.369 reset=3 epoch_ms=1786412633274] RX timeout attempt 2: r vbus_voltage
+[        69 boot+    4063.696 reset=3 epoch_ms=1786412634601] LINK probe failed TX27 RX47
+[        70 boot+    4066.263 reset=3 epoch_ms=1786412637168] RX timeout attempt 2: r vbus_voltage
+[        71 boot+    4067.590 reset=3 epoch_ms=1786412638495] LINK probe failed TX27 RX47
+[        72 boot+    4070.157 reset=3 epoch_ms=1786412641062] RX timeout attempt 2: r vbus_voltage
+[        73 boot+    4071.484 reset=3 epoch_ms=1786412642389] LINK probe failed TX27 RX47
+[        74 boot+    4074.051 reset=3 epoch_ms=1786412644956] RX timeout attempt 2: r vbus_voltage
+[        75 boot+    4075.378 reset=3 epoch_ms=1786412646283] LINK probe failed TX27 RX47
+[        76 boot+    4077.946 reset=3 epoch_ms=1786412648851] RX timeout attempt 2: r vbus_voltage
+[        77 boot+    4079.273 reset=3 epoch_ms=1786412650178] LINK probe failed TX27 RX47
+[        78 boot+    4081.840 reset=3 epoch_ms=1786412652745] RX timeout attempt 2: r vbus_voltage
+[        79 boot+    4083.167 reset=3 epoch_ms=1786412654072] LINK probe failed TX27 RX47
+[        80 boot+    4085.734 reset=3 epoch_ms=1786412656639] RX timeout attempt 2: r vbus_voltage
+[        81 boot+    4087.061 reset=3 epoch_ms=1786412657966] LINK probe failed TX27 RX47
+[        82 boot+    4089.628 reset=3 epoch_ms=1786412660533] RX timeout attempt 2: r vbus_voltage
+[        83 boot+    4090.955 reset=3 epoch_ms=1786412661860] LINK probe failed TX27 RX47
+[        84 boot+    4093.522 reset=3 epoch_ms=1786412664427] RX timeout attempt 2: r vbus_voltage
+[        85 boot+    4094.849 reset=3 epoch_ms=1786412665754] LINK probe failed TX27 RX47
+[        86 boot+    4097.418 reset=3 epoch_ms=1786412668323] RX timeout attempt 2: r vbus_voltage
+[        87 boot+    4098.745 reset=3 epoch_ms=1786412669650] LINK probe failed TX27 RX47
+[        88 boot+    4101.312 reset=3 epoch_ms=1786412672217] RX timeout attempt 2: r vbus_voltage
+[        89 boot+    4102.640 reset=3 epoch_ms=1786412673545] LINK probe failed TX27 RX47
+[        90 boot+    4105.208 reset=3 epoch_ms=1786412676113] RX timeout attempt 2: r vbus_voltage
+[        91 boot+    4106.535 reset=3 epoch_ms=1786412677440] LINK probe failed TX27 RX47
+[        92 boot+    4109.102 reset=3 epoch_ms=1786412680007] RX timeout attempt 2: r vbus_voltage
+[        93 boot+    4110.429 reset=3 epoch_ms=1786412681334] LINK probe failed TX27 RX47
+[        94 boot+    4112.996 reset=3 epoch_ms=1786412683901] RX timeout attempt 2: r vbus_voltage
+[        95 boot+    4114.323 reset=3 epoch_ms=1786412685228] LINK probe failed TX27 RX47
+[        96 boot+    4116.890 reset=3 epoch_ms=1786412687795] RX timeout attempt 2: r vbus_voltage
+[        97 boot+    4118.218 reset=3 epoch_ms=1786412689123] LINK probe failed TX27 RX47
+[        98 boot+    4120.785 reset=3 epoch_ms=1786412691690] RX timeout attempt 2: r vbus_voltage
+[        99 boot+    4122.131 reset=3 epoch_ms=1786412693036] LINK probe failed TX27 RX47
+[       100 boot+    4124.701 reset=3 epoch_ms=1786412695606] RX timeout attempt 2: r vbus_voltage
+[       101 boot+    4126.028 reset=3 epoch_ms=1786412696933] LINK probe failed TX27 RX47
+[       102 boot+    4128.595 reset=3 epoch_ms=1786412699500] RX timeout attempt 2: r vbus_voltage
+[       103 boot+    4129.922 reset=3 epoch_ms=1786412700827] LINK probe failed TX27 RX47
+[       104 boot+    4132.489 reset=3 epoch_ms=1786412703394] RX timeout attempt 2: r vbus_voltage
+[       105 boot+    4133.816 reset=3 epoch_ms=1786412704721] LINK probe failed TX27 RX47
+[       106 boot+    4136.383 reset=3 epoch_ms=1786412707288] RX timeout attempt 2: r vbus_voltage
+[       107 boot+    4137.710 reset=3 epoch_ms=1786412708615] LINK probe failed TX27 RX47
+[       108 boot+    4140.277 reset=3 epoch_ms=1786412711182] RX timeout attempt 2: r vbus_voltage
+[       109 boot+    4141.604 reset=3 epoch_ms=1786412712509] LINK probe failed TX27 RX47
+[       110 boot+    4144.171 reset=3 epoch_ms=1786412715076] RX timeout attempt 2: r vbus_voltage
+[       111 boot+    4145.498 reset=3 epoch_ms=1786412716403] LINK probe failed TX27 RX47
+[       112 boot+    4148.066 reset=3 epoch_ms=1786412718971] RX timeout attempt 2: r vbus_voltage
+[       113 boot+    4149.393 reset=3 epoch_ms=1786412720298] LINK probe failed TX27 RX47
+[       114 boot+    4151.960 reset=3 epoch_ms=1786412722865] RX timeout attempt 2: r vbus_voltage
+[       115 boot+    4153.287 reset=3 epoch_ms=1786412724192] LINK probe failed TX27 RX47
+[       116 boot+    4155.854 reset=3 epoch_ms=1786412726759] RX timeout attempt 2: r vbus_voltage
+[       117 boot+    4157.181 reset=3 epoch_ms=1786412728086] LINK probe failed TX27 RX47
+[       118 boot+    4159.748 reset=3 epoch_ms=1786412730653] RX timeout attempt 2: r vbus_voltage
+[       119 boot+    4161.075 reset=3 epoch_ms=1786412731980] LINK probe failed TX27 RX47
+[       120 boot+    4163.642 reset=3 epoch_ms=1786412734547] RX timeout attempt 2: r vbus_voltage
+[       121 boot+    4164.969 reset=3 epoch_ms=1786412735874] LINK probe failed TX27 RX47
+[       122 boot+    4167.536 reset=3 epoch_ms=1786412738441] RX timeout attempt 2: r vbus_voltage
+[       123 boot+    4168.863 reset=3 epoch_ms=1786412739768] LINK probe failed TX27 RX47
+[       124 boot+    4171.430 reset=3 epoch_ms=1786412742335] RX timeout attempt 2: r vbus_voltage
+[       125 boot+    4172.757 reset=3 epoch_ms=1786412743662] LINK probe failed TX27 RX47
+[       126 boot+    4175.324 reset=3 epoch_ms=1786412746229] RX timeout attempt 2: r vbus_voltage
+[       127 boot+    4176.651 reset=3 epoch_ms=1786412747556] LINK probe failed TX27 RX47
+[       128 boot+    4179.218 reset=3 epoch_ms=1786412750123] RX timeout attempt 2: r vbus_voltage
+[       129 boot+    4180.545 reset=3 epoch_ms=1786412751450] LINK probe failed TX27 RX47
+[       130 boot+    4183.112 reset=3 epoch_ms=1786412754017] RX timeout attempt 2: r vbus_voltage
+[       131 boot+    4184.439 reset=3 epoch_ms=1786412755344] LINK probe failed TX27 RX47
+[       132 boot+    4187.006 reset=3 epoch_ms=1786412757911] RX timeout attempt 2: r vbus_voltage
+[       133 boot+    4188.333 reset=3 epoch_ms=1786412759238] LINK probe failed TX27 RX47
+[       134 boot+    4190.900 reset=3 epoch_ms=1786412761805] RX timeout attempt 2: r vbus_voltage
+[       135 boot+    4192.227 reset=3 epoch_ms=1786412763132] LINK probe failed TX27 RX47
+[       136 boot+    4194.794 reset=3 epoch_ms=1786412765699] RX timeout attempt 2: r vbus_voltage
+[       137 boot+    4196.121 reset=3 epoch_ms=1786412767026] LINK probe failed TX27 RX47
+[       138 boot+    4198.688 reset=3 epoch_ms=1786412769593] RX timeout attempt 2: r vbus_voltage
+[       139 boot+    4200.015 reset=3 epoch_ms=1786412770920] LINK probe failed TX27 RX47
+[       140 boot+    4202.582 reset=3 epoch_ms=1786412773487] RX timeout attempt 2: r vbus_voltage
+[       141 boot+    4203.909 reset=3 epoch_ms=1786412774814] LINK probe failed TX27 RX47
+[       142 boot+    4206.479 reset=3 epoch_ms=1786412777384] RX timeout attempt 2: r vbus_voltage
+[       143 boot+    4207.806 reset=3 epoch_ms=1786412778711] LINK probe failed TX27 RX47
+[       144 boot+    4210.373 reset=3 epoch_ms=1786412781278] RX timeout attempt 2: r vbus_voltage
+[       145 boot+    4211.700 reset=3 epoch_ms=1786412782605] LINK probe failed TX27 RX47
+[       146 boot+    4214.267 reset=3 epoch_ms=1786412785172] RX timeout attempt 2: r vbus_voltage
+[       147 boot+    4215.594 reset=3 epoch_ms=1786412786499] LINK probe failed TX27 RX47
+[       148 boot+    4218.161 reset=3 epoch_ms=1786412789066] RX timeout attempt 2: r vbus_voltage
+[       149 boot+    4219.488 reset=3 epoch_ms=1786412790393] LINK probe failed TX27 RX47
+[       150 boot+    4222.055 reset=3 epoch_ms=1786412792960] RX timeout attempt 2: r vbus_voltage
+[       151 boot+    4223.382 reset=3 epoch_ms=1786412794287] LINK probe failed TX27 RX47
+[       152 boot+    4225.949 reset=3 epoch_ms=1786412796854] RX timeout attempt 2: r vbus_voltage
+[       153 boot+    4227.276 reset=3 epoch_ms=1786412798181] LINK probe failed TX27 RX47
+[       154 boot+    4229.843 reset=3 epoch_ms=1786412800748] RX timeout attempt 2: r vbus_voltage
+[       155 boot+    4231.170 reset=3 epoch_ms=1786412802075] LINK probe failed TX27 RX47
+[       156 boot+    4233.737 reset=3 epoch_ms=1786412804642] RX timeout attempt 2: r vbus_voltage
+[       157 boot+    4235.064 reset=3 epoch_ms=1786412805969] LINK probe failed TX27 RX47
+[       158 boot+    4237.631 reset=3 epoch_ms=1786412808536] RX timeout attempt 2: r vbus_voltage
+[       159 boot+    4238.958 reset=3 epoch_ms=1786412809863] LINK probe failed TX27 RX47
+[       160 boot+    4241.525 reset=3 epoch_ms=1786412812430] RX timeout attempt 2: r vbus_voltage
+[       161 boot+    4242.852 reset=3 epoch_ms=1786412813757] LINK probe failed TX27 RX47
+[       162 boot+    4245.419 reset=3 epoch_ms=1786412816324] RX timeout attempt 2: r vbus_voltage
+[       163 boot+    4246.746 reset=3 epoch_ms=1786412817651] LINK probe failed TX27 RX47
+[       164 boot+    4249.313 reset=3 epoch_ms=1786412820218] RX timeout attempt 2: r vbus_voltage
+[       165 boot+    4250.640 reset=3 epoch_ms=1786412821545] LINK probe failed TX27 RX47
+[       166 boot+    4253.207 reset=3 epoch_ms=1786412824112] RX timeout attempt 2: r vbus_voltage
+[       167 boot+    4254.534 reset=3 epoch_ms=1786412825439] LINK probe failed TX27 RX47
+[       168 boot+    4257.101 reset=3 epoch_ms=1786412828006] RX timeout attempt 2: r vbus_voltage
+[       169 boot+    4258.428 reset=3 epoch_ms=1786412829333] LINK probe failed TX27 RX47
+[       170 boot+    4260.995 reset=3 epoch_ms=1786412831900] RX timeout attempt 2: r vbus_voltage
+[       171 boot+    4262.322 reset=3 epoch_ms=1786412833227] LINK probe failed TX27 RX47
+[       172 boot+    4264.889 reset=3 epoch_ms=1786412835794] RX timeout attempt 2: r vbus_voltage
+[       173 boot+    4266.216 reset=3 epoch_ms=1786412837121] LINK probe failed TX27 RX47
+[       174 boot+    4268.783 reset=3 epoch_ms=1786412839688] RX timeout attempt 2: r vbus_voltage
+[       175 boot+    4270.110 reset=3 epoch_ms=1786412841015] LINK probe failed TX27 RX47
+[       176 boot+    4272.677 reset=3 epoch_ms=1786412843582] RX timeout attempt 2: r vbus_voltage
+[       177 boot+    4274.004 reset=3 epoch_ms=1786412844909] LINK probe failed TX27 RX47
+[       178 boot+    4276.571 reset=3 epoch_ms=1786412847476] RX timeout attempt 2: r vbus_voltage
+[       179 boot+    4277.898 reset=3 epoch_ms=1786412848803] LINK probe failed TX27 RX47
+[       180 boot+    4279.142 reset=3 epoch_ms=1786412850047] LINK connected VBUS 36.291 V
+[       181 boot+    4358.808 reset=3 epoch_ms=1786412929713] RX timeout attempt 2: r vbus_voltage
+[       182 boot+    4361.464 reset=3 epoch_ms=1786412932369] RX timeout attempt 2: r axis0.current_state
+[       183 boot+    4362.806 reset=3 epoch_ms=1786412933711] LINK timeout failures=1 reply_age=7325 ms
+[       184 boot+    4364.198 reset=3 epoch_ms=1786412935103] RX timeout attempt 2: r vbus_voltage
+[       185 boot+    4365.525 reset=3 epoch_ms=1786412936430] LINK probe failed TX27 RX47
+[       186 boot+    4368.092 reset=3 epoch_ms=1786412938997] RX timeout attempt 2: r vbus_voltage
+[       187 boot+    4369.419 reset=3 epoch_ms=1786412940324] LINK probe failed TX27 RX47
+[       188 boot+    4371.986 reset=3 epoch_ms=1786412942891] RX timeout attempt 2: r vbus_voltage
+[       189 boot+    4373.313 reset=3 epoch_ms=1786412944218] LINK probe failed TX27 RX47
+[       190 boot+    4375.880 reset=3 epoch_ms=1786412946785] RX timeout attempt 2: r vbus_voltage
+[       191 boot+    4377.207 reset=3 epoch_ms=1786412948112] LINK probe failed TX27 RX47
+[       192 boot+    4379.774 reset=3 epoch_ms=1786412950679] RX timeout attempt 2: r vbus_voltage
+[       193 boot+    4381.101 reset=3 epoch_ms=1786412952006] LINK probe failed TX27 RX47
+[       194 boot+    4383.668 reset=3 epoch_ms=1786412954573] RX timeout attempt 2: r vbus_voltage
+[       195 boot+    4384.995 reset=3 epoch_ms=1786412955900] LINK probe failed TX27 RX47
+[       196 boot+    4387.562 reset=3 epoch_ms=1786412958467] RX timeout attempt 2: r vbus_voltage
+[       197 boot+    4388.889 reset=3 epoch_ms=1786412959794] LINK probe failed TX27 RX47
+[       198 boot+    4391.456 reset=3 epoch_ms=1786412962361] RX timeout attempt 2: r vbus_voltage
+[       199 boot+    4392.783 reset=3 epoch_ms=1786412963688] LINK probe failed TX27 RX47
+[       200 boot+    4395.350 reset=3 epoch_ms=1786412966255] RX timeout attempt 2: r vbus_voltage
+[       201 boot+    4396.677 reset=3 epoch_ms=1786412967582] LINK probe failed TX27 RX47
+[       202 boot+    4399.244 reset=3 epoch_ms=1786412970149] RX timeout attempt 2: r vbus_voltage
+[       203 boot+    4400.571 reset=3 epoch_ms=1786412971476] LINK probe failed TX27 RX47
+[       204 boot+    4403.138 reset=3 epoch_ms=1786412974043] RX timeout attempt 2: r vbus_voltage
+[       205 boot+    4404.465 reset=3 epoch_ms=1786412975370] LINK probe failed TX27 RX47
+[       206 boot+    4407.032 reset=3 epoch_ms=1786412977937] RX timeout attempt 2: r vbus_voltage
+[       207 boot+    4408.359 reset=3 epoch_ms=1786412979264] LINK probe failed TX27 RX47
+[       208 boot+    4410.926 reset=3 epoch_ms=1786412981831] RX timeout attempt 2: r vbus_voltage
+[       209 boot+    4412.253 reset=3 epoch_ms=1786412983158] LINK probe failed TX27 RX47
+[       210 boot+    4414.820 reset=3 epoch_ms=1786412985725] RX timeout attempt 2: r vbus_voltage
+[       211 boot+    4416.147 reset=3 epoch_ms=1786412987052] LINK probe failed TX27 RX47
+[       212 boot+    4418.714 reset=3 epoch_ms=1786412989619] RX timeout attempt 2: r vbus_voltage
+[       213 boot+    4420.041 reset=3 epoch_ms=1786412990946] LINK probe failed TX27 RX47
+[       214 boot+    4421.285 reset=3 epoch_ms=1786412992190] LINK connected VBUS 36.291 V
+[       215 boot+    4671.753 reset=3 epoch_ms=1786413242658] RX timeout attempt 2: r vbus_voltage
+[       216 boot+    4674.409 reset=3 epoch_ms=1786413245314] RX timeout attempt 2: r axis0.current_state
+[       217 boot+    4675.738 reset=3 epoch_ms=1786413246643] LINK timeout failures=1 reply_age=7314 ms
+[       218 boot+    4677.130 reset=3 epoch_ms=1786413248035] RX timeout attempt 2: r vbus_voltage
+[       219 boot+    4678.457 reset=3 epoch_ms=1786413249362] LINK probe failed TX27 RX47
+[       220 boot+    4681.024 reset=3 epoch_ms=1786413251929] RX timeout attempt 2: r vbus_voltage
+[       221 boot+    4682.351 reset=3 epoch_ms=1786413253256] LINK probe failed TX27 RX47
+[       222 boot+    4684.918 reset=3 epoch_ms=1786413255823] RX timeout attempt 2: r vbus_voltage
+[       223 boot+    4686.245 reset=3 epoch_ms=1786413257150] LINK probe failed TX27 RX47
+[       224 boot+    4688.812 reset=3 epoch_ms=1786413259717] RX timeout attempt 2: r vbus_voltage
+[       225 boot+    4690.139 reset=3 epoch_ms=1786413261044] LINK probe failed TX27 RX47
+[       226 boot+    4692.706 reset=3 epoch_ms=1786413263611] RX timeout attempt 2: r vbus_voltage
+[       227 boot+    4694.033 reset=3 epoch_ms=1786413264938] LINK probe failed TX27 RX47
+[       228 boot+    4696.600 reset=3 epoch_ms=1786413267505] RX timeout attempt 2: r vbus_voltage
+[       229 boot+    4697.927 reset=3 epoch_ms=1786413268832] LINK probe failed TX27 RX47
+[       230 boot+    4700.494 reset=3 epoch_ms=1786413271399] RX timeout attempt 2: r vbus_voltage
+[       231 boot+    4701.821 reset=3 epoch_ms=1786413272726] LINK probe failed TX27 RX47
+[       232 boot+    4704.388 reset=3 epoch_ms=1786413275293] RX timeout attempt 2: r vbus_voltage
+[       233 boot+    4705.715 reset=3 epoch_ms=1786413276620] LINK probe failed TX27 RX47
+[       234 boot+    4708.282 reset=3 epoch_ms=1786413279187] RX timeout attempt 2: r vbus_voltage
+[       235 boot+    4709.609 reset=3 epoch_ms=1786413280514] LINK probe failed TX27 RX47
+[       236 boot+    4712.176 reset=3 epoch_ms=1786413283081] RX timeout attempt 2: r vbus_voltage
+[       237 boot+    4713.503 reset=3 epoch_ms=1786413284408] LINK probe failed TX27 RX47
+[       238 boot+    4716.070 reset=3 epoch_ms=1786413286975] RX timeout attempt 2: r vbus_voltage
+[       239 boot+    4717.397 reset=3 epoch_ms=1786413288302] LINK probe failed TX27 RX47
+[       240 boot+    4719.964 reset=3 epoch_ms=1786413290869] RX timeout attempt 2: r vbus_voltage
+[       241 boot+    4719.968 reset=3 epoch_ms=1786413290873] LINK connected VBUS 36.291 V
+[       242 boot+    4799.675 reset=3 epoch_ms=1786413370580] RX timeout attempt 2: r vbus_voltage
+[       243 boot+    4802.332 reset=3 epoch_ms=1786413373237] RX timeout attempt 2: r axis0.current_state
+[       244 boot+    4803.661 reset=3 epoch_ms=1786413374566] LINK timeout failures=1 reply_age=7313 ms
+[       245 boot+    4805.053 reset=3 epoch_ms=1786413375958] RX timeout attempt 2: r vbus_voltage
+[       246 boot+    4806.380 reset=3 epoch_ms=1786413377285] LINK probe failed TX27 RX47
+[       247 boot+    4808.947 reset=3 epoch_ms=1786413379852] RX timeout attempt 2: r vbus_voltage
+[       248 boot+    4810.274 reset=3 epoch_ms=1786413381179] LINK probe failed TX27 RX47
+[       249 boot+    4812.841 reset=3 epoch_ms=1786413383746] RX timeout attempt 2: r vbus_voltage
+[       250 boot+    4814.168 reset=3 epoch_ms=1786413385073] LINK probe failed TX27 RX47
+[       251 boot+    4816.735 reset=3 epoch_ms=1786413387640] RX timeout attempt 2: r vbus_voltage
+[       252 boot+    4818.062 reset=3 epoch_ms=1786413388967] LINK probe failed TX27 RX47
+[       253 boot+    4820.629 reset=3 epoch_ms=1786413391534] RX timeout attempt 2: r vbus_voltage
+[       254 boot+    4821.956 reset=3 epoch_ms=1786413392861] LINK probe failed TX27 RX47
+[       255 boot+    4824.523 reset=3 epoch_ms=1786413395428] RX timeout attempt 2: r vbus_voltage
+[       256 boot+    4825.850 reset=3 epoch_ms=1786413396755] LINK probe failed TX27 RX47
+[       257 boot+    4828.417 reset=3 epoch_ms=1786413399322] RX timeout attempt 2: r vbus_voltage
+[       258 boot+    4829.744 reset=3 epoch_ms=1786413400649] LINK probe failed TX27 RX47
+[       259 boot+    4832.311 reset=3 epoch_ms=1786413403216] RX timeout attempt 2: r vbus_voltage
+[       260 boot+    4833.638 reset=3 epoch_ms=1786413404543] LINK probe failed TX27 RX47
+[       261 boot+    4836.205 reset=3 epoch_ms=1786413407110] RX timeout attempt 2: r vbus_voltage
+[       262 boot+    4837.532 reset=3 epoch_ms=1786413408437] LINK probe failed TX27 RX47
+[       263 boot+    4840.099 reset=3 epoch_ms=1786413411004] RX timeout attempt 2: r vbus_voltage
+[       264 boot+    4841.426 reset=3 epoch_ms=1786413412331] LINK probe failed TX27 RX47
+[       265 boot+    4843.993 reset=3 epoch_ms=1786413414898] RX timeout attempt 2: r vbus_voltage
+[       266 boot+    4845.320 reset=3 epoch_ms=1786413416225] LINK probe failed TX27 RX47
+[       267 boot+    4847.887 reset=3 epoch_ms=1786413418792] RX timeout attempt 2: r vbus_voltage
+[       268 boot+    4849.214 reset=3 epoch_ms=1786413420119] LINK probe failed TX27 RX47
+[       269 boot+    4851.781 reset=3 epoch_ms=1786413422686] RX timeout attempt 2: r vbus_voltage
+[       270 boot+    4853.108 reset=3 epoch_ms=1786413424013] LINK probe failed TX27 RX47
+[       271 boot+    4855.676 reset=3 epoch_ms=1786413426581] RX timeout attempt 2: r vbus_voltage
+[       272 boot+    4857.003 reset=3 epoch_ms=1786413427908] LINK probe failed TX27 RX47
+[       273 boot+    4859.570 reset=3 epoch_ms=1786413430475] RX timeout attempt 2: r vbus_voltage
+[       274 boot+    4860.897 reset=3 epoch_ms=1786413431802] LINK probe failed TX27 RX47
+[       275 boot+    4862.141 reset=3 epoch_ms=1786413433046] LINK connected VBUS 36.291 V
+[       276 boot+    4862.238 reset=3 epoch_ms=1786413433143] ODESCLOG DA 0 0 5f 1 0
+[       277 boot+    4862.245 reset=3 epoch_ms=1786413433150] ODESCLOG DB 0 22 40 0 0
+[       278 boot+    4862.254 reset=3 epoch_ms=1786413433159] ODESCLOG DC 0 0 0 0 0
+[       279 boot+    4862.259 reset=3 epoch_ms=1786413433164] ODESCLOG DD 0 0.000 956cb37f
+[       280 boot+       0.096 reset=3 epoch_ms=1786413591074] BOOT ODESC logger initialized (256-record RAM ring)
+[       281 boot+       0.147 reset=3 epoch_ms=1786413591125] LINK connected VBUS 36.291 V
+[       282 boot+       0.232 reset=3 epoch_ms=1786413591210] ODESCLOG DA 0 0 5f 1 0
+[       283 boot+       0.239 reset=3 epoch_ms=1786413591216] ODESCLOG DB 0 22 40 0 0
+[       284 boot+       0.245 reset=3 epoch_ms=1786413591222] ODESCLOG DC 0 0 0 0 0
+[       285 boot+       0.251 reset=3 epoch_ms=1786413591229] ODESCLOG DD 0 0.000 956cb37f
+[       286 boot+     996.928 reset=3 epoch_ms=1786414587906] HANDHELD START MOWER 9.1 turns/s
+[       287 boot+    1000.214 reset=3 epoch_ms=1786414591191] HANDHELD mower stop
+[       288 boot+    1110.427 reset=3 epoch_ms=1786414701405] HANDHELD START MOWER 12.1 turns/s
+[       289 boot+    1197.376 reset=3 epoch_ms=1786414788353] RX timeout attempt 2: r ibus
+[       290 boot+    1201.359 reset=3 epoch_ms=1786414792337] LINK timeout failures=0 reply_age=5310 ms
+[       291 boot+    1204.079 reset=3 epoch_ms=1786414795056] LINK probe failed TX27 RX47
+[       292 boot+    1258.631 reset=3 epoch_ms=1786414849608] RX timeout attempt 2: r vbus_voltage
+[       293 boot+    1266.419 reset=3 epoch_ms=1786414857396] LINK probe failed TX27 RX47
+[       294 boot+    1319.617 reset=3 epoch_ms=1786414910595] RX timeout attempt 2: r vbus_voltage
+[       295 boot+    1328.732 reset=3 epoch_ms=1786414919710] LINK probe failed TX27 RX47
+[       296 boot+    1381.921 reset=3 epoch_ms=1786414972898] RX timeout attempt 2: r vbus_voltage
+[       297 boot+    1391.036 reset=3 epoch_ms=1786414982014] LINK probe failed TX27 RX47

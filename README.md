@@ -30,6 +30,10 @@ The ESP32-P4 firmware is the supported host implementation. The earlier
 Raspberry Pi 5 host and commissioning programs are retained under
 [`legacy/`](legacy/README.md) as reference implementations.
 
+The P4 web interface includes `/mower-logs`, which keeps a crash-tolerant,
+per-boot ODESC mowing journal on microSD and exports complete sessions as CSV.
+The live `/odrive` charts remain a rolling 60-second operating view.
+
 ## Repository layout
 
 | Path | Status | Purpose |
@@ -38,6 +42,7 @@ Raspberry Pi 5 host and commissioning programs are retained under
 | [`firmware/stm32-drive/`](firmware/stm32-drive/README.md) | Active | STM32F103 dual-BTS7960 drive controller and telemetry |
 | [`firmware/gd32-stepper/`](firmware/gd32-stepper/README.md) | Active | GD32F303/Ender-3 simultaneous X/Y/Z stepper firmware |
 | [`firmware/esp32-hose/`](firmware/esp32-hose/README.md) | Active | ESP32 hose-valve actuator and position tracking |
+| [`firmware/odesc-v42/`](firmware/odesc-v42/README.md) | Bench validation | Single-axis ODESC source, GPIO3 external-VBUS release, rollback images, and supervised bring-up |
 | [`docs/`](docs/README.md) | Reference | Architecture, wiring, protocols, and safety notes |
 | [`legacy/raspberry-pi/`](legacy/raspberry-pi/README.md) | Legacy | Raspberry Pi 5 multi-UART controller and device clients |
 | [`legacy/prototypes/`](legacy/prototypes/README.md) | Legacy | Commissioning tools and superseded firmware variants |

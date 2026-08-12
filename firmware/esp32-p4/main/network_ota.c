@@ -56,7 +56,7 @@ static const char page_css[] =
 
 static const char wifi_page[] =
 "<!doctype html><html><head><meta name=viewport content='width=device-width,initial-scale=1'><title>Robot Wi-Fi</title><style>"
-"%s</style></head><body><header><div><h1>Robot Wi-Fi</h1><nav><a href='/'>Motor controls</a><a href='/steppers'>Steppers</a><a href='/odrive'>ODrive</a><a href='/update'>Firmware update</a></nav></div></header><main>"
+"%s</style></head><body><header><div><h1>Robot Wi-Fi</h1><nav><a href='/'>Motor controls</a><a href='/steppers'>Steppers</a><a href='/odrive'>ODrive</a><a href='/battery'>Battery</a><a href='/update'>Firmware update</a></nav></div></header><main>"
 "<section><h2>Connection</h2><pre id=status>Loading...</pre></section>"
 "<section><h2>Choose network</h2><button class=secondary onclick=scan()>Scan nearby networks</button>"
 "<label>Available networks<select id=net onchange=choose()><option value=''>Scan first</option></select></label>"
@@ -75,7 +75,7 @@ static const char wifi_page[] =
 
 static const char update_page[] =
 "<!doctype html><html><head><meta name=viewport content='width=device-width,initial-scale=1'><title>Robot Firmware</title><style>"
-"%s</style></head><body><header><div><h1>Firmware Update</h1><nav><a href='/'>Motor controls</a><a href='/steppers'>Steppers</a><a href='/odrive'>ODrive</a><a href='/wifi'>Wi-Fi settings</a></nav></div></header><main>"
+"%s</style></head><body><header><div><h1>Firmware Update</h1><nav><a href='/'>Motor controls</a><a href='/steppers'>Steppers</a><a href='/odrive'>ODrive</a><a href='/battery'>Battery</a><a href='/wifi'>Wi-Fi settings</a></nav></div></header><main>"
 "<section><h2>Native ESP-IDF OTA</h2><pre id=status>Loading...</pre><label>Compiled application image<input id=file type=file accept='.bin,application/octet-stream'></label>"
 "<div class=bar><i id=progress></i></div><p class=warn>Motors are stopped before writing. Keep power connected until the board verifies the image and reboots.</p>"
 "<button id=install onclick=upload()>Install firmware</button></section></main><script>"

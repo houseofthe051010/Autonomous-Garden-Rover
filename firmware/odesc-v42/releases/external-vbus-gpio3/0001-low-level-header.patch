@@ -1,0 +1,24 @@
+--- /home/aditya/Documents/Autonomous-Garden-Rover/firmware/odesc-v42/source/Firmware/MotorControl/low_level.h	2026-08-08 15:15:03.965636445 -0400
++++ Firmware/MotorControl/low_level.h	2026-08-10 23:31:01.965406078 -0400
+@@ -18,11 +18,20 @@
+ extern const float adc_ref_voltage;
+ /* Exported variables --------------------------------------------------------*/
+ extern float vbus_voltage;
++extern float vbus_voltage_internal;
++extern uint32_t vbus_voltage_internal_raw;
++extern float vbus_voltage_internal_adc;
++extern float vbus_voltage_external;
++extern float vbus_voltage_external_adc;
++extern float vbus_voltage_external_scale;
++extern bool vbus_voltage_external_valid;
++extern bool vbus_voltage_external_fault;
++extern uint32_t vbus_voltage_external_status;
+ extern float ibus_;
+ extern bool brake_resistor_armed;
+ extern bool brake_resistor_saturated;
+ extern float brake_resistor_current;
+-extern uint16_t adc_measurements_[ADC_CHANNEL_COUNT];
++extern volatile uint16_t adc_measurements_[ADC_CHANNEL_COUNT];
+ extern osThreadId analog_thread;
+ extern const uint32_t stack_size_analog_thread;
+ /* Exported macro ------------------------------------------------------------*/

@@ -1,6 +1,7 @@
 #include "rover_link.h"
 
 #include <errno.h>
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -15,7 +16,7 @@
 #include "network_ota.h"
 #include "psa/crypto.h"
 #include "rover_control_key.h"
-#include "speaker.h"
+#include "odesc_link.h"
 
 #define ROVER_PORT 4210
 #define PACKET_SIZE 48
@@ -25,6 +26,7 @@
 #define HANDHELD_MIN_RAMP_PERCENT 200
 #define FLAG_STOP 0x01
 #define FLAG_EXIT 0x02
+#define FLAG_MOWER_ENABLE 0x04
 #define CREDENTIAL_RESPONSE_SIZE 136
 #define CREDENTIAL_HEADER_SIZE 24
 #define CREDENTIAL_PLAINTEXT_SIZE 96
@@ -67,6 +69,16 @@ static void write_u16(uint8_t *data, uint16_t value)
 {
     data[0] = value;
     data[1] = value >> 8;
+}
+
+static void write_i16(uint8_t *data, int16_t value)
+{
+    write_u16(data, (uint16_t)value);
+}
+
+static void write_i32(uint8_t *data, int32_t value)
+{
+    write_u32(data, (uint32_t)value);
 }
 
 static bool packet_hmac(const uint8_t *packet, uint8_t output[32])
@@ -225,11 +237,21 @@ static bool send_ack(int socket_fd, const struct sockaddr_in *peer,
     packet[4] = 2;
     packet[5] = CONTROLLER_ID;
     write_u32(packet + 8, sequence);
-    speaker_status_t audio = {0};
-    speaker_get_status(&audio);
-    packet[12] = audio.playing ? audio.source_button : 0;
-    packet[13] = audio.playing ? audio.kind : 0;
-    write_u16(packet + 14, audio.playing ? audio.tone_hz : 0);
+    odesc_controller_snapshot_t mower = {0};
+    odesc_link_get_controller(&mower);
+    packet[6] = (mower.active ? 0x01 : 0) |
+                (mower.connected ? 0x02 : 0) |
+                (mower.current_valid ? 0x04 : 0) |
+                (mower.faulted ? 0x08 : 0) |
+                (mower.controller_owned ? 0x10 : 0);
+    write_u16(packet + 12, (uint16_t)lroundf(mower.target_turns_s * 10.0f));
+    write_i16(packet + 14, (int16_t)lroundf(mower.estimated_rpm));
+    write_u16(packet + 16, (uint16_t)lroundf(mower.voltage_v * 100.0f));
+    write_i16(packet + 18, (int16_t)lroundf(mower.current_a * 100.0f));
+    write_i32(packet + 20, (int32_t)lroundf(mower.power_w * 100.0f));
+    packet[24] = (uint8_t)mower.axis_state;
+    write_u16(packet + 26, (uint16_t)lroundf(mower.minimum_turns_s * 10.0f));
+    write_u16(packet + 28, (uint16_t)lroundf(mower.maximum_turns_s * 10.0f));
     if (packet_hmac(packet, hmac)) {
         memcpy(packet + PACKET_SIZE - AUTH_SIZE, hmac, AUTH_SIZE);
         return sendto(socket_fd, packet, sizeof(packet), 0,
@@ -306,6 +328,8 @@ static void rover_link_task(void *argument)
                     read_i16(packet + 24), read_i16(packet + 26),
                     read_i16(packet + 28),
                 };
+                uint16_t mower_target_deci = read_u16(packet + 30);
+                if (mower_target_deci > 1200) valid = false;
                 for (int i = 0; i < 3; ++i) {
                     if (stepper_rpm[i] < -300 || stepper_rpm[i] > 300) valid = false;
                 }
@@ -321,6 +345,8 @@ static void rover_link_task(void *argument)
                     left = right = 0;
                     memset(stepper_rpm, 0, sizeof(stepper_rpm));
                 }
+                bool mower_enable = (flags & FLAG_MOWER_ENABLE) != 0 &&
+                                    (flags & (FLAG_STOP | FLAG_EXIT)) == 0;
 
                 xSemaphoreTake(link_mutex, portMAX_DELAY);
                 link_status.active = (flags & FLAG_EXIT) == 0;
@@ -335,7 +361,8 @@ static void rover_link_task(void *argument)
                 sequence_valid = true;
                 xSemaphoreGive(link_mutex);
 
-                speaker_controller_buttons(read_u16(packet + 20));
+                odesc_link_controller_request(mower_enable,
+                                              mower_target_deci / 10.0f);
 
                 drive_fn(left, right, ramp, (flags & (FLAG_STOP | FLAG_EXIT)) != 0,
                          stepper_rpm[0], stepper_rpm[1], stepper_rpm[2]);
@@ -367,7 +394,7 @@ static void rover_link_task(void *argument)
             ESP_LOGW(TAG, "Handheld controller timed out; stopping drive");
             drive_fn(0, 0, 80, true, 0, 0, 0);
             network_ota_set_controller_active(false);
-            speaker_controller_buttons(0);
+            odesc_link_controller_request(false, 0.0f);
             sequence_valid = false;
         }
     }

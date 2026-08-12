@@ -35,3 +35,6 @@ esp_err_t speaker_start(void);
 esp_err_t speaker_register_routes(httpd_handle_t server);
 void speaker_controller_buttons(uint16_t button_mask);
 void speaker_get_status(speaker_status_t *status);
+bool speaker_storage_lock(uint32_t timeout_ms);
+void speaker_storage_unlock(void);
+bool speaker_storage_available(bool require_sd);

@@ -13,13 +13,34 @@ uses the onboard ESP32-C6 through ESP-Hosted over SDIO to provide Wi-Fi.
 
 ## GD32 Ender 3 stepper wiring
 
-- ESP32-P4 GPIO27 TX connects to Ender/GD32 PA10 RX.
-- ESP32-P4 GPIO47 RX connects to Ender/GD32 PA9 TX.
-- This orientation was detected and validated on the installed hardware and is
-  now fixed in firmware, so startup never drives the GD32 transmit wire.
+- ESP32-P4 GPIO1 and GPIO2 are the two GD32 UART wires.
+- At startup, both P4 pins remain inputs. The firmware listens for a valid GD32
+  `HB` frame on each wire and makes that pin RX; only then does it enable the
+  other pin as TX. This safely recovers either wire orientation without briefly
+  connecting two UART outputs together.
+- The installed wiring was verified as GPIO2 TX and GPIO1 RX. Passive detection
+  remains enabled so both pins are still safe inputs until the heartbeat arrives.
 - Both boards must share ground and use 3.3 V UART levels.
 - The firmware uses UART2 at 115200 baud, 8N1. UART1 remains dedicated to the
-  STM32 motor controller.
+  STM32 motor controller, while UART3 uses GPIO27/GPIO47 for the ODESC.
+
+## BNO080 UART-SHTP wiring
+
+- ESP32-P4 GPIO5 TX connects to BNO080 RX.
+- ESP32-P4 GPIO6 RX connects to BNO080 TX.
+- Both devices share ground and use 3.3 V UART logic.
+- UART4 runs at the BNO080 UART-SHTP fixed rate of 3,000,000 baud, 8N1.
+- At boot, GPIO5 and GPIO6 stay as inputs while passive level and framed-data
+  checks identify the sensor TX wire. The P4 only enables its TX output after
+  orientation is known, preventing two UART outputs from being connected.
+- Set the BNO080 interface straps for UART-SHTP before powering or resetting
+  the sensor. If the page remains on `passive RX orientation probe`, power-cycle
+  the BNO080 so the P4 can observe its startup traffic.
+
+The installed orientation was hardware-verified as GPIO5 TX and GPIO6 RX. The
+P4 completed the UART-SHTP Buffer Status round trip with a 256-byte grant and
+received rotation vector, calibrated magnetometer, gyroscope, acceleration,
+and linear-acceleration reports concurrently with the other rover UARTs.
 
 ## Web interface
 
@@ -27,6 +48,15 @@ uses the onboard ESP32-C6 through ESP-Hosted over SDIO to provide Wi-Fi.
 2. Open `http://192.168.4.1/`.
 3. Hold a Direction A/B button to run a motor. Releasing it sends stop.
 4. `STOP ALL` stops both motors immediately.
+
+The main page also estimates current and electrical power for each BTS7960
+motor and the combined drivetrain. It assumes the configured 8 V motor bus,
+the BTS7960 nominal `kILIS=8500`, and the common 1 kOhm IS resistor, giving
+approximately `I_load = 8.5 * V_IS`. The STM32 averages each IS ADC input and
+the P4 uses the larger active half-bridge reading. Clone-module resistor values,
+PWM sampling, temperature, and the device's broad low-current tolerance limit
+accuracy; calibrate the factor against a trusted inline ammeter before treating
+these values as absolute measurements.
 
 Additional pages:
 
@@ -40,6 +70,78 @@ Additional pages:
   The page reports driver enable state and the last queued, completed, or
   rejected command. It also provides simultaneous X/Y/Z continuous signed-RPM
   control and simultaneous exact signed step-count moves.
+- `/battery` (`/batter` alias) stores one durable ODESC power history per P4
+  boot on the microSD. It provides selectable sessions, voltage/SOC and
+  current/power charts, session energy, uptime, internet-synchronized sample
+  times, and a clearly labeled five-minute voltage-slope current estimate.
+- `/odrive` controls the single physical ODESC M0 output in sensorless mode.
+  The P4 verifies motor calibration, `enable_sensorless_mode`, pole pairs,
+  startup speed, speed limit, and all relevant fault fields before requesting
+  state 8. Hold-to-run commands refresh a 2 second deadman and use ODrive's
+  velocity-ramp input mode. While M0 is active, every command also feeds a
+  three-second watchdog inside ODESC; normal STOP disables it after requesting
+  IDLE. Runtime and persistent controls separately set commanded phase current,
+  transient current-fault margin, velocity, and acceleration limits only while
+  M0 is IDLE; persistent save
+  restarts ODESC and is read back after reconnection. The page reports estimator
+  turns/s and RPM, phase Iq, bus current, bus power, FET temperature, motor
+  electrical power, FOC voltage-vector magnitude, state, and faults. A sticky
+  mobile strip keeps speed, current, temperature, and power visible while the
+  hold controls are in use. Six in-memory charts retain the latest 60 seconds
+  of speed, bus current, bus power, FET temperature, motor electrical power,
+  and FOC voltage through `/api/odrive/history`. Every chart shows its sampled
+  average and peak; tapping any chart selects the nearest synchronized point
+  and displays every available ODESC measurement at that instant. These live
+  charts are diagnostic and are not written to the microSD. The P4 command
+  guard is fixed at 7,000 RPM
+  (116.67 turns/s). The 80-percent `VBUS * 170 KV` value remains visible as an
+  informational headroom estimate, but battery sag no longer changes the limit
+  of a held command or causes the browser to issue STOP. ODESC's configured
+  speed/current limits and its electrical, thermal, sensorless, and watchdog
+  protections remain authoritative. Release commands IDLE and refresh stopped
+  telemetry immediately.
+  New external-VBUS ODESC firmware is recognized through its validity, fault,
+  and status properties. Values above the legacy 36.3 V ADC ceiling are usable
+  only when all three checks pass. Legacy firmware retains the original
+  clipping lock, and any missing validity reply from new firmware fails closed.
+  A 256-entry rolling black box records UART TX/RX, reconnects, deadman actions,
+  starts, stops, command-guard rejections, and pre-clear fault snapshots. The
+  live trace is held in P4 RAM and exposed at `/api/odrive/blackbox`; the
+  important events are also copied to the bounded persistent microSD log
+  described below.
+- `/mower-logs` lists the durable ODESC mowing sessions stored on microSD.
+  It reports boot duration, actual mower-active duration, energy, average and
+  peak bus power/current, `Iq`, `Id`, phase-current magnitude, speed, motor
+  voltage/power, VBUS, FET temperature, telemetry gaps, and fault count. Any
+  boot session can be selected and downloaded as CSV for full-duration
+  analysis; this is separate from both the 60-second live charts and the
+  five-boot fault/UART event black box.
+- `/sensors` shows a live artificial horizon, corrected rover heading,
+  roll/pitch, angular rates, quaternion, magnetic field, acceleration, UART
+  diagnostics, and calibration state. `Calibrate level` averages stationary
+  orientation for 1.2 seconds and stores mounting roll/pitch offsets in NVS.
+  `Calibrate forward heading` reserves the drivetrain, gives a three-second
+  warning, drives straight for three seconds, and estimates mounting yaw from
+  the sensor-frame acceleration vector during a controlled 100-percent/second
+  ramp. It rejects stale, weak, incoherent, or turning samples. Handheld and
+  normal web drive commands are blocked while calibration
+  owns the drivetrain; abort, stale telemetry, and completion all request an
+  immediate STM32 stop. Test throttle is restricted to 20-100 percent and
+  defaults to 100 percent.
+
+  Forward calibration corrects BNO080-to-rover mounting yaw only. An
+  accelerometer cannot determine direction at constant velocity, and this does
+  not correct magnetic hard/soft-iron distortion or establish true north. Run
+  dynamic magnetometer calibration away from motor phase wires and large steel
+  parts, then validate heading in both travel directions. State is available at
+  `/api/sensors`; actions are POST requests to
+  `/api/sensors/calibration/level`, `/forward?throttle=20..100`, `/abort`,
+  `/reset`, and `/heading-offset?degrees=-180..180`. The latest forward attempt
+  retains up to 160 full IMU samples in
+  P4 RAM. `/api/sensors/calibration/log` downloads a CSV containing timestamps,
+  acceptance decisions, attitude, accelerometer, linear acceleration, gyro,
+  magnetometer, and the final vector-quality summary. A new attempt or reboot
+  replaces this diagnostic trace.
 - `/speaker` controls the onboard ES8311 codec and NS4150B amplifier. It shows
   storage capacity and a structured sound library with format, duration, and
   size metadata. Playback has persistent 0-100 codec volume, optional bounded
@@ -56,6 +158,15 @@ Additional pages:
   mode. The AP remains available at `192.168.4.1` during setup and reconnects.
 - `/update` accepts the native compiled `esp32_p4_stm32_ap.bin`, writes it to
   the inactive OTA slot, validates it, stops the motors, and reboots.
+- `/api/odrive/blackbox` returns the rolling 256-record live UART trace.
+  `/api/odrive/blackbox/persistent` returns the CRC-checked 256 KiB microSD
+  event ring at `/storage/diagnostics/odesc-p4-blackbox.bin`. Routine telemetry
+  is deliberately excluded; boot, link loss/recovery, UART hardware errors,
+  motor faults, control actions, and retrieved ODESC records are retained.
+  Downloads are limited to the latest five boot sessions, repeated probe
+  failures are rate-limited, and the on-disk ring never grows beyond 256 KiB.
+  Records are flushed and `fsync`ed individually so a sudden rover power loss
+  can at most damage the record being written, not the rest of the ring.
 
 The password preview is generated entirely in the browser. The firmware does
 not print the password or return it from a status API. Leading and trailing
@@ -70,6 +181,14 @@ velocity mode is active; one P4 UART-owner task emits complete X/Y/Z targets at
 about 60 Hz. If browser refresh ends, the P4 sends zero targets and `M975`. The
 GD32 independently applies a 250 ms UART deadman. Quick stop clears queued host
 commands and sends `M410` followed by `M975`.
+
+The ODESC UART driver is torn down immediately after three failed voltage polls
+or a four-second reply gap. Reconnect creates a fresh ESP-IDF UART driver,
+clears buffered input, sends blank lines to reset the ODrive ASCII parser, and
+reprobes `vbus_voltage`. FIFO overflow, driver-buffer-full, frame, parity, and
+break counters are exposed by `/api/odrive/status` and written to the persistent
+log when nonzero. Numeric property reads retry malformed replies instead of
+treating the first noise-corrupted line as valid telemetry.
 
 Continuous velocity makes the P4's open-loop position unknown because the GD32
 does not report exact accumulated steps in that mode. Reset zero before using
@@ -99,24 +218,35 @@ The custom controller firmware in
 `rover` AP when its right joystick button (GP15) is pressed. GP14 sends a signed
 stop/exit packet and disconnects. Its Pico supplies all four axes and the button
 mask at 50 Hz. The controller ESP32 forwards a 48-byte `RVR2` packet to
-`192.168.4.1:4210`; bytes 24-29 contain signed X/Y/Z RPM and bytes 32-47 contain
-the truncated HMAC-SHA256 tag. The P4 replies with a signed `RVA2` packet.
+`192.168.4.1:4210`; bytes 24-29 contain signed X/Y/Z RPM, bytes 30-31 contain
+the ODESC mower target in 0.1 turns/s, and bytes 32-47 contain the truncated
+HMAC-SHA256 tag. Control flag `0x04` requests mower operation. The P4 replies
+with a signed 48-byte `RVA2` packet containing measured mower telemetry.
 
 Only device ID 1 can command motion. The left stick controls tank drive. The
 right stick maps left/right to X negative/positive and up/down to Y
-positive/negative. GP5/GP2 maps to Z positive/negative. Maximum RPM is 50-300:
+positive/negative. GP5/GP2 maps to Z positive/negative. Maximum RPM is 50-600;
+the controller defaults are X 300, Y 100, and Z 150 RPM:
 GP9/GP8 adjust X, GP0/GP1 adjust Y, and GP3/GP4 adjust Z in steps of 5. The P4
 renews the existing GD32 400 ms direct-motion lease from each valid packet and
 queues `M17` when the first nonzero controller command needs the drivers.
-GP10 plays speaker assignment 1 and GP11 plays assignment 2 on each press. The
-defaults are a 700 ms 150 Hz tone and a 700 ms 600 Hz tone at codec volume 100.
+On the normal rover TFT page, GP10 toggles the ODESC mower and GP11 opens the
+dedicated mower page. On that page GP10 decreases and GP11 increases the target
+by 1.0 turns/s; holding either button accelerates the repeat rate. The touch
+Start/Stop control toggles the mower and Back returns to the rover page. The TFT
+shows `MOWER STARTED` or `MOWER STOPPED`, target turns/s, estimated sensorless
+RPM, ODESC bus current and power, and battery bus voltage. A controller lease
+expires after 550 ms, forcing zero velocity and IDLE when packets stop.
 The P4 enforces a 200 percent/second minimum drivetrain ramp for authenticated
 handheld packets, even if an older controller requests the former 80 percent
 rate. This reaches full duty in about 0.5 seconds. Direction reversal still
 ramps through zero and immediate stop or lease expiry remains un-ramped. The
 browser `/mobile` ramp remains independently adjustable from 10-300 percent.
-The P4 includes the active button, sound kind, and tone frequency in signed
-`RVA2` acknowledgement bytes 12-15 so the controller TFT can show playback.
+In the signed `RVA2` acknowledgement, byte 6 reports mower active, connected,
+current-valid, fault, and controller-owned flags. Bytes 12-13 are target
+deci-turns/s, 14-15 estimated RPM, 16-17 bus centivolts, 18-19 signed bus
+centiamps, 20-23 signed centiwatts, byte 24 axis state, and bytes 26-29 the
+minimum and maximum deci-turns/s accepted by the ODESC configuration.
 
 The AP is always enabled. In normal operation the P4/C6 can run its AP and a
 router station concurrently, subject to the single C6 radio/channel. The P4
@@ -147,11 +277,106 @@ The one-time wired installation uses a rollback-capable 16 MB layout:
 | `ota_1` | `0x420000` | 4 MB |
 | Internal data storage | `0x820000` | 7.875 MB |
 
-The current PSRAM-enabled application build is 1,078,048 bytes (SHA-256
-`c040e68c6189c322ca27d63103a03719673ac9b6c4cc50a946d837ef54161a1a`),
-leaving 75 percent of either OTA slot free. Large audio, model, map, and log
+The current PSRAM-enabled application build is 1,211,168 bytes (SHA-256
+`b74d0ee7c126bda054f1625457f82fa42952c9e45b4931130ba7bc27f8a13f95`),
+leaving 71 percent of either OTA slot free. Large audio, model, map, and log
 files should be placed on microSD rather than embedded in the application
 image.
+
+## Battery history and abrupt power loss
+
+Battery history is stored under `/storage/battery`. Each physical power session
+creates one 512 KiB journal that is fully allocated before sampling begins.
+Software, OTA, panic, and watchdog resets resume the active journal through an
+NVS pointer; power-on, brownout, and deep-sleep wake create a new journal. A
+one-time migration finds and resumes the newest valid journal created by older
+firmware that did not store the NVS pointer. New journal headers record the
+initial reset reason, while older files appear as legacy/unknown.
+
+Two independently validated 512-byte header sectors describe the journal.
+Every five seconds, one sample is written to a 64-byte fixed record with a
+sequence number and CRC, followed by `fflush()` and `fsync()`. Missing or stale
+ODESC telemetry still creates a durable record, marked unavailable; the API
+returns null measurements and the chart breaks the line across the gap instead
+of showing stale data or shortening the apparent session. A journal holds 8,176
+records, or about 11.4 hours. The file never grows while logging, so normal
+samples do not modify the FAT allocation chain. On restart, readers stop at the
+first missing or invalid CRC and retain every earlier valid sample. Because
+eight compact records share one physical 512-byte SD sector, an interrupted
+sector program can discard up to the newest 40 seconds rather than only the
+final sample; it does not invalidate completed earlier sectors. The reader
+remains compatible with version-1 8 MiB/512-byte-record and version-2 compact
+journals already on the card.
+
+The logger reads cached ODESC telemetry rather than issuing extra UART queries.
+It records bus voltage, signed `ibus`, bus power, positive session watt-hours,
+10S4P voltage SOC, physical-session elapsed time, and Unix time after SNTP
+synchronizes through the router. The dashboard reports durable, measured, and
+missing-telemetry counts and scales charts by elapsed time rather than sample
+index. Elapsed time remains valid without internet; absolute timestamps cannot
+be known before synchronization because this board currently has no
+battery-backed RTC.
+
+The configured pack is 10S4P with 2.6 Ah cells, or 10.4 Ah nominal. Voltage SOC
+and its five-minute derivative are rough estimates affected by load sag,
+recovery, chemistry, temperature, imbalance, and charging. ODESC `ibus` is the
+better live measurement but excludes the P4 and accessories powered outside
+the ODESC current path.
+
+Tapping either battery chart selects the nearest durable sample. The dashboard
+then fits voltage and SOC against time by least squares using valid samples up
+to five minutes before and after the selection. It reports voltage trend in
+V/hour, a SOC-derived current estimate, fit `R-squared`, and point count, and
+draws the fitted voltage segment over the chart. A low `R-squared` means the
+estimate should be ignored. This calculated current is not a substitute for
+ODESC's measured `ibus`, especially while load changes, charging, or voltage
+recovery are occurring.
+
+Audio uploads use synced `.part` files and a recoverable `.bak` transaction when
+replacing an existing sound. Startup restores the old file or promotes a fully
+received new file after an interrupted replacement. Microphone recordings
+checkpoint a valid WAV header and sync approximately once per second; startup
+repairs an interrupted recording to its last durable sample boundary. Mount
+failure never automatically formats the microSD. These measures bound typical
+data loss, but software cannot guarantee that FAT or an SD card's internal
+flash translation layer survives power removal during a physical program/erase
+operation. A hold-up capacitor/supervisor that provides enough time for a
+controlled final sync is required for that guarantee.
+
+The 2026-08-09 deployment resumed the pre-update active journal across OTA,
+reconstructed its elapsed time from its last synchronized record, and appended
+five-second missing-telemetry records while the ODESC UART was offline. The
+record count, gap count, and null API measurements advanced correctly without
+creating another short session. Previously closed journals remain readable.
+
+## Mower session telemetry
+
+Detailed mower telemetry is stored under `/storage/mower`, independently of
+the compact battery-history journal. Every P4 boot creates one preallocated
+8 MiB `MOW_XXXXXXXX.jrn` file. It records at 1 Hz for 65,528 samples, or about
+18.2 hours. Each 128-byte record has a sequence number and CRC and is followed
+by `fflush()` and `fsync()`. The file is allocated before logging starts, so
+normal samples do not extend its FAT allocation chain. After an abrupt power
+cut, readers retain the valid record prefix and reject an incomplete final
+record.
+
+Each record contains P4 uptime and synchronized Unix time when available,
+cumulative mower-active time and positive bus energy, link/validity/activity
+flags, ODESC state and all error words, VBUS, signed bus current, bus power,
+commanded turns/s, estimated RPM, measured and requested `Iq` and `Id`, phase
+current magnitude, motor voltage, motor electrical power, and FET temperature.
+Missing or stale telemetry is written as a marked gap rather than repeating an
+old value.
+
+Open `/mower-logs` to select a boot session, inspect its aggregate values, and
+download the CRC-validated records as CSV. The summary averages current and
+power over valid active samples and reports average/peak VBUS, bus current and
+power, `Iq`, `Id`, phase-current magnitude, absolute RPM, motor voltage/power,
+and FET temperature; accumulated Wh integrates positive bus power while the
+mower is active. These are 1 Hz UART samples, so a short hardware overcurrent
+can appear only in the recorded fault words and need not equal the peak sampled
+current. Download completed sessions after mowing when practical because
+exporting a long current session temporarily owns the shared microSD interface.
 
 ## Speaker and sound storage
 
@@ -295,8 +520,8 @@ ESP-Hosted detected the onboard ESP32-C6 over four-bit SDIO, started the AP and
 DHCP server at `192.168.4.1`, and verified the STM32 link on GPIO21 TX/GPIO22 RX.
 Continuous `HB` and `MSTAT` records were received without UART errors.
 
-Powered-GD32 testing verified the automatically detected orientation as P4
-GPIO27 TX and GPIO47 RX. Heartbeat and `HB_ACK_OK` counters remained synchronized
+Earlier powered-GD32 testing detected P4 GPIO27 TX and GPIO47 RX. Heartbeat and
+`HB_ACK_OK` counters remained synchronized
 without reconnecting. X, Y, and Z each completed separate +16 and -16 microstep
 transactions and returned to software zero. A +1001 X request was also rejected
 without being queued when the configured range was -1000 to +1000.
@@ -357,6 +582,15 @@ with the installed microSD: `recording_01.wav` appeared in `/speaker`, played
 through the recording source at volume 100 with +3 dB boost, stopped normally,
 and did not disturb the STM32 heartbeat. The deployed output setting is volume
 100 with +3 dB boost; it can be changed or disabled from `/speaker`.
+
+On 2026-08-11, the external-VBUS-aware image was OTA-deployed to `ota_0` at
+`192.168.1.201`. The P4 detected ODESC serial `357F356D3135` on GPIO27 TX and
+GPIO47 RX, reported the external VBUS source supported, valid, fault-free, and
+status zero, and retained the selected reading without applying the legacy
+36.3 V clipping lock. A 12-sample observation completed with zero UART command
+failures, FIFO overflows, frame errors, or parity errors. M0, both BTS7960
+motors, and all command targets remained stopped. Validation above 36.3 V and
+the physical external-sense disconnect test remain pending.
 
 ## Build
 

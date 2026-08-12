@@ -1,0 +1,20 @@
+--- /home/aditya/Documents/Autonomous-Garden-Rover/firmware/odesc-v42/source/Firmware/MotorControl/odrive_main.h	2026-08-08 15:15:03.966840112 -0400
++++ Firmware/MotorControl/odrive_main.h	2026-08-10 23:31:02.181406165 -0400
+@@ -199,7 +199,16 @@
+     void disarm_with_error(Error error);
+ 
+     Error error_ = ERROR_NONE;
+-    float& vbus_voltage_ = ::vbus_voltage; // TODO: make this the actual variable
++    float& vbus_voltage_ = ::vbus_voltage;
++    float& vbus_voltage_internal_ = ::vbus_voltage_internal;
++    uint32_t& vbus_voltage_internal_raw_ = ::vbus_voltage_internal_raw;
++    float& vbus_voltage_internal_adc_ = ::vbus_voltage_internal_adc;
++    float& vbus_voltage_external_ = ::vbus_voltage_external;
++    float& vbus_voltage_external_adc_ = ::vbus_voltage_external_adc;
++    float& vbus_voltage_external_scale_ = ::vbus_voltage_external_scale;
++    bool& vbus_voltage_external_valid_ = ::vbus_voltage_external_valid;
++    bool& vbus_voltage_external_fault_ = ::vbus_voltage_external_fault;
++    uint32_t& vbus_voltage_external_status_ = ::vbus_voltage_external_status;
+     float& ibus_ = ::ibus_; // TODO: make this the actual variable
+     float ibus_report_filter_k_ = 1.0f;
+ 

@@ -1,0 +1,50 @@
+--- /home/aditya/Documents/Autonomous-Garden-Rover/firmware/odesc-v42/source/Firmware/odrive-interface.yaml	2026-08-08 15:15:04.051840224 -0400
++++ Firmware/odrive-interface.yaml	2026-08-10 23:31:02.753406396 -0400
+@@ -78,13 +78,46 @@
+           BRAKE_DEADTIME_VIOLATION:
+           BRAKE_DUTY_CYCLE_NAN:
+           INVALID_BRAKE_RESISTANCE: {doc: '`config.brake_resistance` is non-positive or NaN. Make sure that `config.brake_resistance` is a positive number.'}
++          EXTERNAL_VBUS_INVALID:
++            doc: GPIO3 external VBUS measurement is missing, railed, misconfigured, or implausible. Motor PWM remains disarmed.
+ #          BRAKE_RESISTOR_DISARMED:
+ #            doc: The brake resistor was unexpectedly disarmed.
+         
+       vbus_voltage:
+         type: readonly float32
+         unit: V
+-        brief: Voltage on the DC bus as measured by the ODrive.
++        brief: Selected control voltage from the validated GPIO3 external divider.
++      vbus_voltage_internal:
++        type: readonly float32
++        unit: V
++        brief: Original onboard injected-ADC VBUS reading. This may clip near 36.3 V on this ODESC clone.
++      vbus_voltage_internal_raw:
++        type: readonly uint32
++        brief: Original onboard injected-ADC conversion count from ADC1 JDR1.
++      vbus_voltage_internal_adc:
++        type: readonly float32
++        unit: V
++        brief: Original onboard injected-ADC pin voltage before applying the board divider ratio.
++      vbus_voltage_external:
++        type: readonly float32
++        unit: V
++        brief: Calibrated battery voltage measured through the GPIO3 divider.
++      vbus_voltage_external_adc:
++        type: readonly float32
++        unit: V
++        brief: Raw voltage at GPIO3 before applying the calibrated divider multiplier.
++      vbus_voltage_external_scale:
++        type: readonly float32
++        brief: Calibrated GPIO3 divider multiplier used for the selected control voltage.
++      vbus_voltage_external_valid:
++        type: readonly bool
++        brief: True after GPIO3 passes startup and plausibility validation.
++      vbus_voltage_external_fault:
++        type: readonly bool
++        brief: True when a validated GPIO3 source subsequently fails validation and motor PWM is disarmed.
++      vbus_voltage_external_status:
++        type: readonly uint32
++        brief: "Validation flags: 1 warmup, 2 GPIO mode/channel, 4 low, 8 high, 16 mismatch."
+       ibus:
+         type: readonly float32
+         unit: A

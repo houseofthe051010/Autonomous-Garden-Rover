@@ -17,6 +17,9 @@
 #include "odesc_link.h"
 #include "rover_link.h"
 #include "speaker.h"
+#include "battery_history.h"
+#include "mower_history.h"
+#include "bno080_link.h"
 #include "stepper_link.h"
 
 #define STM32_UART UART_NUM_1
@@ -32,6 +35,8 @@
 #define TANK_DEFAULT_RAMP_PERCENT 80
 #define TANK_TARGET_TIMEOUT_MS 450
 #define TANK_UPDATE_MS 50
+#define DRIVE_BUS_VOLTAGE 8.0f
+#define BTS7960_SENSE_AMPS_PER_VOLT 8.5f
 
 static const char *TAG = "robot_ap";
 
@@ -78,10 +83,18 @@ static int64_t tank_last_update_ms;
 static int64_t tank_last_send_ms;
 static bool tank_mode_active;
 static bool motor_stop_pending;
+static bool imu_calibration_owns_drive;
 
 static int64_t now_ms(void)
 {
     return esp_timer_get_time() / 1000;
+}
+
+static esp_err_t send_conflict(httpd_req_t *request, const char *message)
+{
+    httpd_resp_set_status(request, "409 Conflict");
+    httpd_resp_set_type(request, "text/plain");
+    return httpd_resp_sendstr(request, message);
 }
 
 static void state_error(const char *message)
@@ -373,6 +386,16 @@ static void set_controller_targets(int left, int right, unsigned ramp_percent,
                                    int16_t y_rpm, int16_t z_rpm)
 {
     static bool controller_stepper_active;
+    xSemaphoreTake(state_mutex, portMAX_DELAY);
+    bool imu_owns_drive = imu_calibration_owns_drive;
+    xSemaphoreGive(state_mutex);
+    if (imu_owns_drive) {
+        if (immediate_stop) {
+            bno080_link_abort_calibration();
+            set_tank_target(0, 0, 300, true);
+        }
+        return;
+    }
     set_tank_target(left, right, ramp_percent, immediate_stop);
     if (immediate_stop) {
         if (controller_stepper_active) stepper_link_quick_stop();
@@ -384,6 +407,36 @@ static void set_controller_targets(int left, int right, unsigned ramp_percent,
     } else {
         ESP_LOGD(TAG, "Controller stepper command ignored until GD32 direct link is ready");
     }
+}
+
+static bool imu_motion_begin(void)
+{
+    rover_link_status_t controller = {0};
+    rover_link_get_status(&controller);
+    xSemaphoreTake(state_mutex, portMAX_DELAY);
+    bool allowed = state.alive && !controller.active && !imu_calibration_owns_drive;
+    if (allowed) imu_calibration_owns_drive = true;
+    xSemaphoreGive(state_mutex);
+    if (allowed) set_tank_target(0, 0, 300, true);
+    return allowed;
+}
+
+static bool imu_motion_drive(int left, int right, unsigned ramp_percent,
+                             bool immediate_stop)
+{
+    xSemaphoreTake(state_mutex, portMAX_DELAY);
+    bool owns_drive = imu_calibration_owns_drive && state.alive;
+    xSemaphoreGive(state_mutex);
+    if (owns_drive) set_tank_target(left, right, ramp_percent, immediate_stop);
+    return owns_drive;
+}
+
+static void imu_motion_end(void)
+{
+    set_tank_target(0, 0, 300, true);
+    xSemaphoreTake(state_mutex, portMAX_DELAY);
+    imu_calibration_owns_drive = false;
+    xSemaphoreGive(state_mutex);
 }
 
 static int ramp_value(int current, int target, int step)
@@ -532,15 +585,17 @@ static const char index_html[] =
 ".estop{background:#c5251c;color:#fff;border:0;min-width:110px}main{padding:12px 12px 36px}"
 ".motor{background:#fff;border:1px solid #cbd3da;border-radius:8px;padding:12px;margin-bottom:14px}"
 ".head,.speed{display:flex;justify-content:space-between;align-items:center}.head h2{font-size:18px;margin:0}.state{font-size:13px;background:#edf1f4;padding:6px 8px;border-radius:5px}"
-".sense,.enc{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}.reading{border:1px solid #d3dbe2;border-left:4px solid #15806a;padding:8px;border-radius:5px}"
+".sense,.enc{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0}.reading{border:1px solid #d3dbe2;border-left:4px solid #15806a;padding:8px;border-radius:5px;min-width:0;overflow-wrap:anywhere}"
 ".reading small{display:block;color:#596673}.reading strong{font-size:18px}.speed{font-size:13px;font-weight:700;margin-top:12px}"
 "input[type=range]{width:100%;height:42px;accent-color:#176ab0}.drive{display:grid;grid-template-columns:1fr 86px 1fr;gap:8px}"
 ".a{background:#176daf;color:#fff;border-color:#176daf}.b{background:#55772c;color:#fff;border-color:#55772c}.stop{background:#c5251c;color:#fff;border-color:#c5251c}"
 ".panel{background:#fff;border:1px solid #cbd3da;border-radius:8px;padding:12px}.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}"
+".power{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:14px}.power .reading{background:#fff}.estimate{font-size:11px;color:#68747d;margin:7px 0 0}"
 ".enc{grid-template-columns:repeat(4,1fr)}.log{font:12px monospace;white-space:pre-wrap;word-break:break-word;margin-top:10px;color:#4c5965}"
-"@media(max-width:480px){.drive{grid-template-columns:1fr 74px 1fr}.actions{grid-template-columns:1fr}.enc{grid-template-columns:1fr 1fr}}"
-"</style></head><body><header><div class=top><div><h1>STM32 Dual Motor Test</h1><div id=link class=link>Connecting...</div><div class=nav><a href='/mobile'>Tank drive</a><a href='/steppers'>Steppers</a><a href='/odrive'>ODrive</a><a href='/speaker'>Speaker</a><a href='/mic'>Mic</a><a href='/wifi'>Wi-Fi</a><a href='/update'>Firmware</a></div></div>"
+"@media(max-width:600px){.top{display:grid;grid-template-columns:minmax(0,1fr) auto}.top>div{min-width:0}.nav{display:flex;flex-wrap:wrap;gap:4px 12px}.nav a{margin:0}.drive{grid-template-columns:minmax(0,1fr) 74px minmax(0,1fr)}.actions{grid-template-columns:1fr}.enc,.power{grid-template-columns:repeat(2,minmax(0,1fr))}.power .reading:last-child{grid-column:1/-1}}"
+"</style></head><body><header><div class=top><div><h1>STM32 Dual Motor Test</h1><div id=link class=link>Connecting...</div><div class=nav><a href='/mobile'>Tank drive</a><a href='/steppers'>Steppers</a><a href='/odrive'>ODrive</a><a href='/mower-logs'>Mower Logs</a><a href='/sensors'>Sensors</a><a href='/battery'>Battery</a><a href='/speaker'>Speaker</a><a href='/mic'>Mic</a><a href='/wifi'>Wi-Fi</a><a href='/update'>Firmware</a></div></div>"
 "<button class=estop onclick=stopAll()>STOP ALL</button></div></header><main>"
+"<section class=power><div class=reading><small>Drivetrain current (I)</small><strong id=totalI>0.00 A</strong></div><div class=reading><small>Drivetrain power (P)</small><strong id=totalP>0.0 W</strong></div><div class=reading><small>Motor bus</small><strong id=busV>8.0 V</strong></div></section>"
 "<div id=motors></div><section class=panel><h2>Encoder ADC</h2><div class=enc>"
 "<div class=reading><small>PA0</small><strong id=e0>0</strong></div><div class=reading><small>PA1</small><strong id=e1>0</strong></div>"
 "<div class=reading><small>PA2</small><strong id=e2>0</strong></div><div class=reading><small>PA3</small><strong id=e3>0</strong></div></div>"
@@ -549,6 +604,7 @@ static const char index_html[] =
 "const motorHtml=n=>`<section class=motor><div class=head><h2>Motor ${n}</h2><div id=s${n} class=state>Stopped</div></div>"
 "<div class=sense><div class=reading><small>R_IS</small><strong id=a${n}>0 mV</strong><small id=ar${n}>raw 0</small></div>"
 "<div class=reading><small>L_IS</small><strong id=b${n}>0 mV</strong><small id=br${n}>raw 0</small></div></div>"
+"<div class=sense><div class=reading><small>Motor current (I)</small><strong id=i${n}>0.00 A</strong></div><div class=reading><small>Motor power (P)</small><strong id=p${n}>0.0 W</strong></div></div><p class=estimate>Estimated from averaged IS voltage, nominal kILIS, a 1 kOhm sense resistor, and the 8 V motor bus.</p>"
 "<div class=speed><span>Duty</span><output id=o${n}>1024 / 4095</output></div><input id=d${n} type=range min=0 max=4095 value=1024 oninput=show(${n})>"
 "<div class=drive><button class=a id=aBtn${n}>Hold A</button><button class=stop onclick=stopMotor(${n})>STOP</button><button class=b id=bBtn${n}>Hold B</button></div></section>`;"
 "document.getElementById('motors').innerHTML=motorHtml(1)+motorHtml(2);"
@@ -560,7 +616,7 @@ static const char index_html[] =
 "function stopMotor(n){api('/api/stop?m='+n)}function stopAll(){api('/api/stop?m=all')}function enc(c){api('/api/encoder?cmd='+c+'&hz=20')}"
 "function render(s){let l=document.getElementById('link');l.textContent=s.alive?'STM32 alive | TX '+s.tx+' RX '+s.rx:'STM32 heartbeat missing';l.className='link '+(s.alive?'ok':'');"
 "s.motors.forEach((m,i)=>{let n=i+1;document.getElementById('s'+n).textContent=m.direction==='S'?'Stopped':'Direction '+m.direction+' | '+Math.round(m.duty*100/4095)+'%';"
-"document.getElementById('a'+n).textContent=m.a_mv+' mV';document.getElementById('b'+n).textContent=m.b_mv+' mV';document.getElementById('ar'+n).textContent='raw '+m.a_raw;document.getElementById('br'+n).textContent='raw '+m.b_raw});"
+"document.getElementById('a'+n).textContent=m.a_mv+' mV';document.getElementById('b'+n).textContent=m.b_mv+' mV';document.getElementById('ar'+n).textContent='raw '+m.a_raw;document.getElementById('br'+n).textContent='raw '+m.b_raw;document.getElementById('i'+n).textContent=m.current_a.toFixed(2)+' A';document.getElementById('p'+n).textContent=m.power_w.toFixed(1)+' W'});document.getElementById('totalI').textContent=s.drivetrain.current_a.toFixed(2)+' A';document.getElementById('totalP').textContent=s.drivetrain.power_w.toFixed(1)+' W';document.getElementById('busV').textContent=s.drivetrain.bus_v.toFixed(1)+' V';"
 "s.encoders.forEach((v,i)=>document.getElementById('e'+i).textContent=v);let c=s.controller;document.getElementById('log').textContent='CONTROLLER BLACK BOX\\nactive '+c.active+' | age '+c.age_ms+' ms | datagrams '+c.datagrams+' | valid '+c.valid+' | rejected '+c.rejected+'\\nwrong size '+c.wrong_size+' | auth '+c.auth_rejects+' | range '+c.range_rejects+' | stale '+c.stale+' | ACK '+c.acks+'/'+c.ack_failures+'\\n\\nSTM32\\nAP: '+location.host+' | encoder '+s.encoder_hz+' Hz | watchdog '+s.watchdog+'\\nlast: '+s.last_reply+'\\nerror: '+s.last_error}"
 "hold(1,'A');hold(1,'B');hold(2,'A');hold(2,'B');setInterval(()=>api('/api/status'),700);api('/api/status');"
 "</script></body></html>";
@@ -606,13 +662,22 @@ static void json_escape(char *output, size_t output_size, const char *input)
     output[used] = '\0';
 }
 
+static float estimated_motor_current_a(const motor_state_t *motor)
+{
+    if (motor->direction == 'S' || motor->duty == 0) return 0.0f;
+    unsigned sense_mv = motor->current_a_mv > motor->current_b_mv
+                            ? motor->current_a_mv
+                            : motor->current_b_mv;
+    return ((float)sense_mv / 1000.0f) * BTS7960_SENSE_AMPS_PER_VOLT;
+}
+
 static esp_err_t send_status_json(httpd_req_t *request)
 {
     robot_state_t snapshot;
     rover_link_status_t controller = {0};
     char reply[260];
     char error[260];
-    char body[1500];
+    char body[1900];
     int tank_snapshot[4];
     unsigned ramp_snapshot;
 
@@ -627,6 +692,16 @@ static esp_err_t send_status_json(httpd_req_t *request)
     json_escape(reply, sizeof(reply), snapshot.last_reply);
     json_escape(error, sizeof(error), snapshot.last_error);
     rover_link_get_status(&controller);
+    float motor_current[2] = {
+        estimated_motor_current_a(&snapshot.motors[0]),
+        estimated_motor_current_a(&snapshot.motors[1]),
+    };
+    float motor_power[2] = {
+        motor_current[0] * DRIVE_BUS_VOLTAGE,
+        motor_current[1] * DRIVE_BUS_VOLTAGE,
+    };
+    float drivetrain_current = motor_current[0] + motor_current[1];
+    float drivetrain_power = motor_power[0] + motor_power[1];
 
     snprintf(body, sizeof(body),
              "{\"alive\":%s,\"tx\":%d,\"rx\":%d,\"heartbeat_ms\":%u,"
@@ -637,9 +712,10 @@ static esp_err_t send_status_json(httpd_req_t *request)
              "\"stepper_rpm\":[%d,%d,%d],\"valid\":%lu,\"rejected\":%lu,"
              "\"datagrams\":%lu,\"wrong_size\":%lu,\"auth_rejects\":%lu,"
              "\"range_rejects\":%lu,\"stale\":%lu,\"acks\":%lu,\"ack_failures\":%lu},"
+             "\"drivetrain\":{\"bus_v\":%.2f,\"current_a\":%.4f,\"power_w\":%.3f},"
              "\"tank\":{\"left_target\":%d,\"right_target\":%d,\"left_output\":%d,\"right_output\":%d,\"ramp\":%u},\"motors\":["
-             "{\"direction\":\"%c\",\"duty\":%u,\"a_raw\":%u,\"b_raw\":%u,\"a_mv\":%u,\"b_mv\":%u},"
-             "{\"direction\":\"%c\",\"duty\":%u,\"a_raw\":%u,\"b_raw\":%u,\"a_mv\":%u,\"b_mv\":%u}]}",
+             "{\"direction\":\"%c\",\"duty\":%u,\"a_raw\":%u,\"b_raw\":%u,\"a_mv\":%u,\"b_mv\":%u,\"current_a\":%.4f,\"power_w\":%.3f},"
+             "{\"direction\":\"%c\",\"duty\":%u,\"a_raw\":%u,\"b_raw\":%u,\"a_mv\":%u,\"b_mv\":%u,\"current_a\":%.4f,\"power_w\":%.3f}]}",
              snapshot.alive ? "true" : "false", snapshot.tx_gpio,
              snapshot.rx_gpio, snapshot.heartbeat_ms, snapshot.watchdog,
              reply, error, snapshot.encoder_rate_hz, snapshot.encoders[0],
@@ -658,14 +734,17 @@ static esp_err_t send_status_json(httpd_req_t *request)
              (unsigned long)controller.stale_packets,
              (unsigned long)controller.acks_sent,
              (unsigned long)controller.ack_failures,
+             DRIVE_BUS_VOLTAGE, drivetrain_current, drivetrain_power,
              tank_snapshot[0], tank_snapshot[1], tank_snapshot[2], tank_snapshot[3],
              ramp_snapshot,
              snapshot.motors[0].direction, snapshot.motors[0].duty,
              snapshot.motors[0].current_a_raw, snapshot.motors[0].current_b_raw,
              snapshot.motors[0].current_a_mv, snapshot.motors[0].current_b_mv,
+             motor_current[0], motor_power[0],
              snapshot.motors[1].direction, snapshot.motors[1].duty,
              snapshot.motors[1].current_a_raw, snapshot.motors[1].current_b_raw,
-             snapshot.motors[1].current_a_mv, snapshot.motors[1].current_b_mv);
+             snapshot.motors[1].current_a_mv, snapshot.motors[1].current_b_mv,
+             motor_current[1], motor_power[1]);
     httpd_resp_set_type(request, "application/json");
     httpd_resp_set_hdr(request, "Cache-Control", "no-store");
     return httpd_resp_sendstr(request, body);
@@ -711,6 +790,12 @@ static esp_err_t status_handler(httpd_req_t *request)
 
 static esp_err_t motor_handler(httpd_req_t *request)
 {
+    xSemaphoreTake(state_mutex, portMAX_DELAY);
+    bool imu_owns_drive = imu_calibration_owns_drive;
+    xSemaphoreGive(state_mutex);
+    if (imu_owns_drive) {
+        return send_conflict(request, "IMU forward calibration owns drivetrain");
+    }
     int motor = query_int(request, "m", 0);
     int duty = query_int(request, "duty", 0);
     char direction[4] = {0};
@@ -737,6 +822,12 @@ static esp_err_t motor_handler(httpd_req_t *request)
 
 static esp_err_t tank_handler(httpd_req_t *request)
 {
+    xSemaphoreTake(state_mutex, portMAX_DELAY);
+    bool imu_owns_drive = imu_calibration_owns_drive;
+    xSemaphoreGive(state_mutex);
+    if (imu_owns_drive) {
+        return send_conflict(request, "IMU forward calibration owns drivetrain");
+    }
     int left = query_int(request, "left", 0);
     int right = query_int(request, "right", 0);
     int ramp = query_int(request, "ramp", TANK_DEFAULT_RAMP_PERCENT);
@@ -751,6 +842,7 @@ static esp_err_t tank_handler(httpd_req_t *request)
 
 static esp_err_t stop_handler(httpd_req_t *request)
 {
+    bno080_link_abort_calibration();
     char motor[8] = {0};
     query_string(request, "m", motor, sizeof(motor));
     char command[24];
@@ -844,7 +936,8 @@ static httpd_handle_t start_web_server(void)
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.stack_size = 8192;
     config.lru_purge_enable = true;
-    config.max_uri_handlers = 72;
+    config.max_open_sockets = 12;
+    config.max_uri_handlers = 80;
     httpd_handle_t server = NULL;
     if (httpd_start(&server, &config) != ESP_OK) {
         return NULL;
@@ -865,6 +958,9 @@ static httpd_handle_t start_web_server(void)
     ESP_ERROR_CHECK(stepper_link_register_routes(server));
     ESP_ERROR_CHECK(odesc_link_register_routes(server));
     ESP_ERROR_CHECK(speaker_register_routes(server));
+    ESP_ERROR_CHECK(battery_history_register_routes(server));
+    ESP_ERROR_CHECK(mower_history_register_routes(server));
+    ESP_ERROR_CHECK(bno080_link_register_routes(server));
     return server;
 }
 
@@ -888,6 +984,18 @@ void app_main(void)
     result = speaker_start();
     if (result != ESP_OK) {
         ESP_LOGE(TAG, "Speaker unavailable: %s", esp_err_to_name(result));
+    }
+    result = battery_history_start();
+    if (result != ESP_OK) {
+        ESP_LOGE(TAG, "Battery history unavailable: %s", esp_err_to_name(result));
+    }
+    result = mower_history_start();
+    if (result != ESP_OK) {
+        ESP_LOGE(TAG, "Mower history unavailable: %s", esp_err_to_name(result));
+    }
+    result = bno080_link_start(imu_motion_begin, imu_motion_drive, imu_motion_end);
+    if (result != ESP_OK) {
+        ESP_LOGE(TAG, "BNO080 unavailable: %s", esp_err_to_name(result));
     }
     ESP_ERROR_CHECK(rover_link_start(set_controller_targets));
     ESP_ERROR_CHECK(start_web_server() ? ESP_OK : ESP_FAIL);

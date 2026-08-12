@@ -2,6 +2,7 @@
 
 #include <dirent.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -213,6 +214,123 @@ static bool write_wav_header(FILE *file, uint32_t rate, uint16_t channels,
            fwrite(header, 1, sizeof(header), file) == sizeof(header);
 }
 
+static void sync_directory(const char *path)
+{
+    int descriptor = open(path, O_RDONLY);
+    if (descriptor >= 0) {
+        (void)fsync(descriptor);
+        close(descriptor);
+    }
+}
+
+static bool parse_wav(FILE *file, wav_info_t *info);
+
+static bool complete_wav_file(const char *path)
+{
+    FILE *file = fopen(path, "rb");
+    wav_info_t info;
+    bool okay = file && parse_wav(file, &info) &&
+                fseek(file, 0, SEEK_END) == 0 &&
+                (uint64_t)ftell(file) >=
+                    (uint64_t)info.data_offset + info.data_size;
+    if (file) fclose(file);
+    return okay;
+}
+
+static void recover_sound_transactions(void)
+{
+    DIR *directory = opendir(SOUND_DIR);
+    if (!directory) return;
+    bool changed = false;
+    struct dirent *entry;
+    while ((entry = readdir(directory)) != NULL) {
+        size_t length = strlen(entry->d_name);
+        if (length <= 8 || strcmp(entry->d_name + length - 8, ".wav.bak") != 0) continue;
+        char backup[sizeof(SOUND_DIR) + 76];
+        char final[sizeof(SOUND_DIR) + 70];
+        char name[64];
+        size_t final_length = length - 4;
+        if (final_length >= sizeof(name)) continue;
+        memcpy(name, entry->d_name, final_length);
+        name[final_length] = 0;
+        if (!valid_filename(name)) continue;
+        snprintf(backup, sizeof(backup), SOUND_DIR "/%s", entry->d_name);
+        file_path(final, sizeof(final), name);
+        struct stat existing;
+        if (stat(final, &existing) == 0) changed |= unlink(backup) == 0;
+        else changed |= rename(backup, final) == 0;
+    }
+    closedir(directory);
+
+    directory = opendir(SOUND_DIR);
+    if (!directory) return;
+    while ((entry = readdir(directory)) != NULL) {
+        size_t length = strlen(entry->d_name);
+        if (length <= 9 || strcmp(entry->d_name + length - 9, ".wav.part") != 0) continue;
+        char part[sizeof(SOUND_DIR) + 76];
+        char final[sizeof(SOUND_DIR) + 70];
+        char name[64];
+        size_t final_length = length - 5;
+        if (final_length >= sizeof(name)) continue;
+        memcpy(name, entry->d_name, final_length);
+        name[final_length] = 0;
+        if (!valid_filename(name)) continue;
+        snprintf(part, sizeof(part), SOUND_DIR "/%s", entry->d_name);
+        file_path(final, sizeof(final), name);
+        struct stat existing;
+        if (stat(final, &existing) == 0 || !complete_wav_file(part)) {
+            changed |= unlink(part) == 0;
+        } else {
+            changed |= rename(part, final) == 0;
+        }
+    }
+    closedir(directory);
+    if (changed) sync_directory(SOUND_DIR);
+}
+
+static void recover_recording_parts(void)
+{
+    DIR *directory = opendir(RECORDING_DIR);
+    if (!directory) return;
+    struct dirent *entry;
+    while ((entry = readdir(directory)) != NULL) {
+        size_t length = strlen(entry->d_name);
+        if (length <= 9 || strcmp(entry->d_name + length - 9, ".wav.part") != 0) continue;
+        char part_path[sizeof(RECORDING_DIR) + 76];
+        char final_name[64];
+        char final_path[sizeof(RECORDING_DIR) + 70];
+        size_t final_length = length - 5;
+        if (final_length >= sizeof(final_name)) continue;
+        memcpy(final_name, entry->d_name, final_length);
+        final_name[final_length] = 0;
+        if (!valid_filename(final_name)) continue;
+        snprintf(part_path, sizeof(part_path), RECORDING_DIR "/%s", entry->d_name);
+        recording_path(final_path, sizeof(final_path), final_name);
+        FILE *file = fopen(part_path, "rb+");
+        if (!file || fseek(file, 0, SEEK_END) != 0) {
+            if (file) fclose(file);
+            continue;
+        }
+        long size = ftell(file);
+        uint32_t bytes = size > 44 ? (uint32_t)(size - 44) : 0;
+        bytes -= bytes % (RECORD_CHANNELS * 2);
+        bool okay = bytes && write_wav_header(file, RECORD_SAMPLE_RATE,
+                                              RECORD_CHANNELS, bytes) &&
+                    fflush(file) == 0 && fsync(fileno(file)) == 0 &&
+                    ftruncate(fileno(file), 44 + bytes) == 0;
+        fclose(file);
+        struct stat existing;
+        if (okay && stat(final_path, &existing) != 0 &&
+            rename(part_path, final_path) == 0) {
+            sync_directory(RECORDING_DIR);
+            ESP_LOGW(TAG, "Recovered interrupted recording %s", final_name);
+        } else if (!okay) {
+            ESP_LOGW(TAG, "Leaving unrecoverable recording fragment %s", entry->d_name);
+        }
+    }
+    closedir(directory);
+}
+
 static bool parse_wav(FILE *file, wav_info_t *info)
 {
     char tag[4];
@@ -264,7 +382,7 @@ static esp_err_t mount_storage(void)
 {
     const esp_vfs_fat_sdmmc_mount_config_t sd_mount = {
         .format_if_mount_failed = false,
-        .max_files = 8,
+        .max_files = 12,
         .allocation_unit_size = 16 * 1024,
     };
     sdmmc_host_t host = SDMMC_HOST_DEFAULT();
@@ -309,8 +427,8 @@ static esp_err_t mount_storage(void)
         sd_power = NULL;
     }
     const esp_vfs_fat_mount_config_t flash_mount = {
-        .format_if_mount_failed = true,
-        .max_files = 8,
+        .format_if_mount_failed = false,
+        .max_files = 12,
         .allocation_unit_size = 4096,
     };
     result = esp_vfs_fat_spiflash_mount_rw_wl(
@@ -738,6 +856,7 @@ static void recording_task(void *argument)
 
         int64_t started = esp_timer_get_time();
         uint64_t bytes = 0;
+        uint32_t last_checkpoint_ms = 0;
         set_recording_state(request.name, true, false, 0, 0);
         ESP_LOGI(TAG, "Recording %s", request.name);
 
@@ -764,6 +883,19 @@ static void recording_task(void *argument)
             }
             bytes += written;
             uint32_t elapsed = (uint32_t)((esp_timer_get_time() - started) / 1000);
+            if (elapsed - last_checkpoint_ms >= 1000) {
+                xSemaphoreTake(storage_mutex, portMAX_DELAY);
+                okay = write_wav_header(file, RECORD_SAMPLE_RATE, RECORD_CHANNELS,
+                                        (uint32_t)bytes) &&
+                       fseek(file, 44 + (long)bytes, SEEK_SET) == 0 &&
+                       fflush(file) == 0 && fsync(fileno(file)) == 0;
+                xSemaphoreGive(storage_mutex);
+                last_checkpoint_ms = elapsed;
+                if (!okay) {
+                    set_error("Recording checkpoint failed");
+                    break;
+                }
+            }
             set_recording_state(request.name, true, false, bytes, elapsed);
         }
 
@@ -784,6 +916,7 @@ static void recording_task(void *argument)
             struct stat existing;
             okay = stat(final_path, &existing) != 0 &&
                     rename(temporary, final_path) == 0;
+            if (okay) sync_directory(RECORDING_DIR);
         }
         if (!okay) unlink(temporary);
         xSemaphoreGive(storage_mutex);
@@ -1095,7 +1228,7 @@ static const char speaker_html[] =
 "button,input,select{min-height:44px;border:1px solid #aeb8c1;border-radius:6px;font-size:15px;padding:8px}button{font-weight:700;background:#e7ecf0}.primary{background:#1769aa;color:white;border-color:#1769aa}.danger{background:#b42318;color:white;border-color:#b42318}.control{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.row{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:8px}"
 "label{display:grid;gap:5px;font-size:13px;font-weight:700}input,select{width:100%;background:white}.level{display:grid;grid-template-columns:minmax(0,1fr) 130px auto;gap:8px;align-items:end}.file{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;border-top:1px solid #dde2e7;padding:9px 0}.name{font-weight:700;overflow-wrap:anywhere}.log{font:12px monospace;white-space:pre-wrap;word-break:break-word;color:#4c5965}progress{width:100%;height:16px}.empty{color:#596673}"
 "@media(max-width:540px){.stats,.grid,.level{grid-template-columns:1fr}.file{grid-template-columns:1fr 72px 72px}.file .info{grid-column:1/-1}.control{grid-template-columns:1fr 1fr}.control .danger{grid-column:1/-1}}"
-"</style></head><body><header><div class=top><h1>Rover Audio Library</h1><div class=nav><a href='/'>Motors</a><a href='/mobile'>Drive</a><a href='/steppers'>Steppers</a><a href='/speaker'>Speaker</a><a href='/mic'>Mic</a><a href='/wifi'>Wi-Fi</a></div></div></header><main>"
+"</style></head><body><header><div class=top><h1>Rover Audio Library</h1><div class=nav><a href='/'>Motors</a><a href='/mobile'>Drive</a><a href='/steppers'>Steppers</a><a href='/battery'>Battery</a><a href='/speaker'>Speaker</a><a href='/mic'>Mic</a><a href='/wifi'>Wi-Fi</a></div></div></header><main>"
 "<section class=panel><div class=stats><div class=stat><small>Now playing</small><strong id=audio>Loading</strong></div><div class=stat><small>Storage</small><strong id=store>-</strong></div><div class=stat><small>Free</small><strong id=free>-</strong></div></div><div class=control><button id=pause onclick=pauseAudio()>Pause</button><button onclick=resumeAudio()>Resume</button><button class=danger onclick=stopAudio()>Stop</button></div></section>"
 "<section class=panel><h2>Output level</h2><div class=level><label>Codec volume <span id=volumeOut>100%</span><input id=volume type=range min=0 max=100 value=100 oninput='levelDirty=true;showVolume()'></label><label>Digital boost<select id=boost onchange='levelDirty=true'><option value=0>Off</option><option value=3>+3 dB</option><option value=6>+6 dB</option></select></label><button onclick=saveLevel()>Save level</button></div><p class=meta>Boost can make quiet files louder but clips peaks. The codec and amplifier are already at maximum hardware output at 100%.</p></section>"
 "<section class=panel><h2>Controller button assignments</h2><div class=grid><label>GP10 sound<select id=b1 onchange='assignmentDirty[0]=true'></select></label><label>GP11 sound<select id=b2 onchange='assignmentDirty[1]=true'></select></label><button onclick=assign(1)>Save GP10</button><button onclick=assign(2)>Save GP11</button><button class=primary onclick=play('tone:150')>Test 150 Hz</button><button class=primary onclick=play('tone:600')>Test 600 Hz</button></div></section>"
@@ -1200,6 +1333,7 @@ static esp_err_t delete_handler(httpd_req_t *request)
     file_path(path, sizeof(path), name);
     xSemaphoreTake(storage_mutex, portMAX_DELAY);
     int result = unlink(path);
+    if (result == 0) sync_directory(SOUND_DIR);
     xSemaphoreGive(storage_mutex);
     if (result != 0) return httpd_resp_send_err(request, HTTPD_404_NOT_FOUND, "file not found");
     refresh_storage_space();
@@ -1209,6 +1343,7 @@ static esp_err_t delete_handler(httpd_req_t *request)
 static esp_err_t upload_handler(httpd_req_t *request)
 {
     char name[64], path[sizeof(SOUND_DIR) + 70], temporary[sizeof(SOUND_DIR) + 76];
+    char backup[sizeof(SOUND_DIR) + 76];
     if (!state.storage_mounted || request->content_len <= 0 ||
         request->content_len > MAX_UPLOAD_BYTES ||
         !query_value(request, "name", name, sizeof(name)) || !valid_filename(name)) {
@@ -1216,6 +1351,7 @@ static esp_err_t upload_handler(httpd_req_t *request)
     }
     file_path(path, sizeof(path), name);
     snprintf(temporary, sizeof(temporary), "%s.part", path);
+    snprintf(backup, sizeof(backup), "%s.bak", path);
     xSemaphoreTake(storage_mutex, portMAX_DELAY);
     FILE *file = fopen(temporary, "wb");
     if (!file) {
@@ -1244,14 +1380,31 @@ static esp_err_t upload_handler(httpd_req_t *request)
         remaining -= received;
     }
     xSemaphoreTake(storage_mutex, portMAX_DELAY);
+    if (okay) okay = fflush(file) == 0 && fsync(fileno(file)) == 0;
     fclose(file);
     wav_info_t wav;
     file = okay ? fopen(temporary, "rb") : NULL;
     okay = file && parse_wav(file, &wav);
     if (file) fclose(file);
     if (okay) {
-        unlink(path);
-        okay = rename(temporary, path) == 0;
+        struct stat existing;
+        bool had_final = stat(path, &existing) == 0;
+        if (had_final) {
+            unlink(backup);
+            okay = rename(path, backup) == 0;
+            if (okay) sync_directory(SOUND_DIR);
+        }
+        if (okay) {
+            okay = rename(temporary, path) == 0;
+            if (okay) sync_directory(SOUND_DIR);
+        }
+        if (okay && had_final) {
+            unlink(backup);
+            sync_directory(SOUND_DIR);
+        } else if (!okay && had_final) {
+            rename(backup, path);
+            sync_directory(SOUND_DIR);
+        }
     }
     if (!okay) unlink(temporary);
     xSemaphoreGive(storage_mutex);
@@ -1301,7 +1454,7 @@ static esp_err_t send_mic_status(httpd_req_t *request)
 static const char mic_html[] =
 "<!doctype html><html><head><meta name=viewport content='width=device-width,initial-scale=1'>"
 "<title>Rover Microphone</title><style>*{box-sizing:border-box;letter-spacing:0}body{margin:0;background:#eef1f4;color:#17202a;font-family:Arial,sans-serif}header{background:#17212b;color:white;border-bottom:3px solid #e2a400;padding:11px 14px}.top,main{max-width:820px;margin:auto}h1{font-size:19px;margin:0 0 5px}.nav a{color:white;margin-right:13px;font-size:13px}main{padding:12px}.panel{background:white;border:1px solid #cbd3da;border-radius:8px;padding:12px;margin-bottom:12px}h2{font-size:17px;margin:0 0 10px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{border-left:4px solid #16816a;background:#f3f5f7;padding:9px;min-width:0}.stat small,.meta{display:block;color:#596673;font-size:12px}.stat strong{display:block;font-size:17px;overflow-wrap:anywhere}button,input,select{min-height:44px;border:1px solid #aeb8c1;border-radius:6px;font-size:15px;padding:8px}button{font-weight:700;background:#e7ecf0}.primary{background:#1769aa;color:white;border-color:#1769aa}.danger{background:#b42318;color:white;border-color:#b42318}.record{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px}.gain{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}.file{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:8px;align-items:center;border-top:1px solid #dde2e7;padding:9px 0}.name{font-weight:700;overflow-wrap:anywhere}.log{font:12px monospace;white-space:pre-wrap;word-break:break-word;color:#4c5965}.empty{color:#596673}a.download{display:grid;place-items:center;min-height:44px;border:1px solid #aeb8c1;border-radius:6px;padding:8px;color:#17202a;text-decoration:none;font-weight:700;background:#e7ecf0}@media(max-width:560px){.stats{grid-template-columns:1fr}.record{grid-template-columns:1fr 1fr}.record input{grid-column:1/-1}.file{grid-template-columns:1fr 1fr 1fr}.file .info{grid-column:1/-1}}</style></head>"
-"<body><header><div class=top><h1>Rover Microphone</h1><div class=nav><a href='/'>Motors</a><a href='/mobile'>Drive</a><a href='/steppers'>Steppers</a><a href='/speaker'>Speaker</a><a href='/mic'>Mic</a><a href='/wifi'>Wi-Fi</a></div></div></header><main>"
+"<body><header><div class=top><h1>Rover Microphone</h1><div class=nav><a href='/'>Motors</a><a href='/mobile'>Drive</a><a href='/steppers'>Steppers</a><a href='/battery'>Battery</a><a href='/speaker'>Speaker</a><a href='/mic'>Mic</a><a href='/wifi'>Wi-Fi</a></div></div></header><main>"
 "<section class=panel><div class=stats><div class=stat><small>Microphone</small><strong id=status>Loading</strong></div><div class=stat><small>Recorded</small><strong id=elapsed>0:00</strong></div><div class=stat><small>Storage free</small><strong id=free>-</strong></div></div></section>"
 "<section class=panel><h2>New recording</h2><div class=record><input id=name value='recording_01.wav' maxlength=63><button class=primary onclick=start()>Record</button><button class=danger onclick=stop()>Stop</button></div><p class=meta>16 kHz, 16-bit stereo WAV. Maximum 10 minutes per recording.</p></section>"
 "<section class=panel><h2>Microphone sensitivity</h2><div class=gain><select id=gain onchange=setGain(this.value)><option value=0>0 dB</option><option value=6>6 dB</option><option value=12>12 dB</option><option value=18>18 dB</option><option value=24>24 dB</option><option value=30>30 dB</option><option value=36>36 dB</option><option value=42>42 dB</option></select><span id=gainSaved class=meta>Saved</span></div><p class=meta>Higher gain hears quieter sounds but also increases case noise and clipping. Applied to the next recording.</p></section>"
@@ -1379,6 +1532,7 @@ static esp_err_t mic_delete_handler(httpd_req_t *request)
     recording_path(path, sizeof(path), name);
     xSemaphoreTake(storage_mutex, portMAX_DELAY);
     int result = unlink(path);
+    if (result == 0) sync_directory(RECORDING_DIR);
     xSemaphoreGive(storage_mutex);
     if (result != 0) return httpd_resp_send_err(request, HTTPD_404_NOT_FOUND, "not found");
     refresh_storage_space();
@@ -1436,6 +1590,10 @@ esp_err_t speaker_start(void)
         if (mkdir(RECORDING_DIR, 0775) != 0 && errno != EEXIST) {
             set_error("Could not create recordings directory");
         }
+        xSemaphoreTake(storage_mutex, portMAX_DELAY);
+        recover_sound_transactions();
+        recover_recording_parts();
+        xSemaphoreGive(storage_mutex);
         refresh_storage_space();
     } else {
         set_error("No microSD or internal sound storage available");
@@ -1480,6 +1638,27 @@ void speaker_get_status(speaker_status_t *status)
     xSemaphoreTake(state_mutex, portMAX_DELAY);
     *status = state;
     xSemaphoreGive(state_mutex);
+}
+
+bool speaker_storage_lock(uint32_t timeout_ms)
+{
+    if (!storage_mutex) return false;
+    return xSemaphoreTake(storage_mutex, pdMS_TO_TICKS(timeout_ms)) == pdTRUE;
+}
+
+void speaker_storage_unlock(void)
+{
+    if (storage_mutex) xSemaphoreGive(storage_mutex);
+}
+
+bool speaker_storage_available(bool require_sd)
+{
+    bool available = false;
+    if (!state_mutex) return false;
+    xSemaphoreTake(state_mutex, portMAX_DELAY);
+    available = state.storage_mounted && (!require_sd || state.storage_is_sd);
+    xSemaphoreGive(state_mutex);
+    return available;
 }
 
 esp_err_t speaker_register_routes(httpd_handle_t server)

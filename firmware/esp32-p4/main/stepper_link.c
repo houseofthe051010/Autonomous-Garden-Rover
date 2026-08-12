@@ -19,8 +19,8 @@
 
 #define GD32_UART UART_NUM_2
 #define GD32_BAUD 115200
-#define GD32_TX_GPIO 27
-#define GD32_RX_GPIO 47
+#define GD32_WIRE_A_GPIO 1
+#define GD32_WIRE_B_GPIO 2
 #define DETECT_WINDOW_MS 4500
 #define LINK_TIMEOUT_MS 8000
 #define LINE_CAPACITY 192
@@ -124,10 +124,10 @@ static void uart_close(void)
         uart_driver_delete(GD32_UART);
         uart_installed = false;
     }
-    gpio_reset_pin(GD32_TX_GPIO);
-    gpio_reset_pin(GD32_RX_GPIO);
-    gpio_set_direction(GD32_TX_GPIO, GPIO_MODE_INPUT);
-    gpio_set_direction(GD32_RX_GPIO, GPIO_MODE_INPUT);
+    gpio_reset_pin(GD32_WIRE_A_GPIO);
+    gpio_reset_pin(GD32_WIRE_B_GPIO);
+    gpio_set_direction(GD32_WIRE_A_GPIO, GPIO_MODE_INPUT);
+    gpio_set_direction(GD32_WIRE_B_GPIO, GPIO_MODE_INPUT);
     line_length = 0;
     xSemaphoreGive(write_mutex);
 }
@@ -402,21 +402,30 @@ static void process_line(const char *line)
 static bool detect_orientation(void)
 {
     char line[LINE_CAPACITY];
-    ESP_LOGI(TAG, "Listening for GD32 heartbeat on fixed RX GPIO%d", GD32_RX_GPIO);
-    if (uart_open_listen(GD32_RX_GPIO)) {
+    const int rx_candidates[] = {GD32_WIRE_B_GPIO, GD32_WIRE_A_GPIO};
+    for (size_t candidate = 0;
+         candidate < sizeof(rx_candidates) / sizeof(rx_candidates[0]);
+         ++candidate) {
+        int rx_gpio = rx_candidates[candidate];
+        int tx_gpio = rx_gpio == GD32_WIRE_A_GPIO ?
+                      GD32_WIRE_B_GPIO : GD32_WIRE_A_GPIO;
+        ESP_LOGI(TAG,
+                 "Passive GD32 listen on RX GPIO%d; GPIO%d remains input",
+                 rx_gpio, tx_gpio);
+        if (!uart_open_listen(rx_gpio)) continue;
         int64_t deadline = now_ms() + DETECT_WINDOW_MS;
         while (now_ms() < deadline) {
             if (!read_line(line, sizeof(line), 100)) continue;
-            ESP_LOGI(TAG, "GD32 fixed RX GPIO%d: %s", GD32_RX_GPIO, line);
+            ESP_LOGI(TAG, "GD32 candidate RX GPIO%d: %s", rx_gpio, line);
             if (strncmp(line, "HB ", 3) != 0) continue;
             xSemaphoreTake(write_mutex, portMAX_DELAY);
-            esp_err_t result = uart_set_pin(GD32_UART, GD32_TX_GPIO, GD32_RX_GPIO,
+            esp_err_t result = uart_set_pin(GD32_UART, tx_gpio, rx_gpio,
                                             UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
             xSemaphoreGive(write_mutex);
             if (result != ESP_OK) break;
             xSemaphoreTake(state_mutex, portMAX_DELAY);
-            state.tx_gpio = GD32_TX_GPIO;
-            state.rx_gpio = GD32_RX_GPIO;
+            state.tx_gpio = tx_gpio;
+            state.rx_gpio = rx_gpio;
             state.receiving = true;
             state.round_trip = false;
             state.direct_probe_sent = false;
@@ -426,19 +435,19 @@ static bool detect_orientation(void)
             state.reconnects++;
             xSemaphoreGive(state_mutex);
             process_line(line);
-            ESP_LOGI(TAG, "GD32 fixed UART: TX GPIO%d RX GPIO%d",
-                     GD32_TX_GPIO, GD32_RX_GPIO);
+            ESP_LOGI(TAG, "GD32 UART detected: TX GPIO%d RX GPIO%d",
+                     tx_gpio, rx_gpio);
             return true;
         }
+        uart_close();
     }
-    uart_close();
     xSemaphoreTake(state_mutex, portMAX_DELAY);
     state.receiving = false;
     state.round_trip = false;
     state.tx_gpio = -1;
     state.rx_gpio = -1;
     snprintf(state.last_error, sizeof(state.last_error),
-             "No GD32 heartbeat on fixed TX27/RX47");
+             "No GD32 heartbeat on passive GPIO1/GPIO2 inputs");
     xSemaphoreGive(state_mutex);
     return false;
 }
@@ -1045,7 +1054,7 @@ static const char page_html[] =
 "label{min-width:0;font-size:12px;color:#4c5965}input{min-width:0;width:100%;min-height:40px;margin-top:4px;padding:7px;font-size:15px;border:1px solid #adb8c2;border-radius:5px}"
 "button{min-width:0;max-width:100%;min-height:46px;border:1px solid #aab5bf;border-radius:6px;background:#e7ecf0;font-size:14px;font-weight:700;padding:7px;touch-action:none}.primary{background:#176daf;color:white}.danger{background:#c5251c;color:white}.jog button{background:#dce8f1}.log{background:white;border:1px solid #cbd3da;border-radius:8px;padding:10px;margin-top:10px;font:12px monospace;white-space:pre-wrap;overflow-wrap:anywhere}"
 "@media(max-width:760px){.axes{grid-template-columns:minmax(0,1fr)}.toolbar{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:520px){.direct-grid,.direct-actions{grid-template-columns:minmax(0,1fr)}}@media(max-width:420px){.toolbar{grid-template-columns:minmax(0,1fr)}}"
-"</style></head><body><header><div><h1>GD32 X/Y/Z Stepper Control</h1><div id=link class=link>Detecting GPIO27/47...</div><a href='/'>Motors</a><a href='/odrive'>ODrive</a><a href='/wifi'>Wi-Fi</a><a href='/update'>Firmware</a></div></header><main>"
+"</style></head><body><header><div><h1>GD32 X/Y/Z Stepper Control</h1><div id=link class=link>Passively detecting GPIO1/GPIO2...</div><a href='/'>Motors</a><a href='/odrive'>ODrive</a><a href='/battery'>Battery</a><a href='/wifi'>Wi-Fi</a><a href='/update'>Firmware</a></div></header><main>"
 "<div class=toolbar><button class=primary onclick=enable(1)>Enable drivers</button><button onclick=enable(0)>Disable drivers</button><button class=danger onclick=stopAll()>QUICK STOP</button></div>"
 "<section class=direct><h2>Simultaneous continuous RPM</h2><div id=directfw class=notice>Checking direct-motion firmware...</div><div class=direct-grid><label>X signed RPM<input id=vx type=number min=-600 max=600 step=0.5 value=0></label><label>Y signed RPM<input id=vy type=number min=-600 max=600 step=0.5 value=0></label><label>Z signed RPM<input id=vz type=number min=-600 max=600 step=0.5 value=0></label></div><div class=direct-actions><button id=runDirect class=primary onclick=startDirect()>Run / apply all axes</button><button onclick=centerDirect()>Set all to zero</button><button class=danger onclick=stopAll()>Exit and stop</button></div></section>"
 "<section class=direct><h2>Simultaneous exact steps</h2><div class=notice>Each nonzero axis starts together and stops at its exact signed count.</div><div class=direct-grid><label>X steps<input id=cx type=number value=0></label><label>Y steps<input id=cy type=number value=0></label><label>Z steps<input id=cz type=number value=0></label><label>X RPM<input id=cxr type=number min=1 max=600 value=30></label><label>Y RPM<input id=cyr type=number min=1 max=600 value=30></label><label>Z RPM<input id=czr type=number min=1 max=600 value=30></label></div><div class=direct-actions><button id=runCount class=primary onclick=countMove()>Run simultaneous steps</button><button class=danger onclick=stopAll()>Abort move</button></div></section>"

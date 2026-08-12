@@ -1,4 +1,4 @@
-idf_component_register(SRCS "main.c" "network_ota.c" "rover_link.c" "stepper_link.c" "odesc_link.c" "speaker.c"
+idf_component_register(SRCS "main.c" "network_ota.c" "rover_link.c" "stepper_link.c" "odesc_link.c" "odesc_persistent_log.c" "speaker.c" "battery_history.c" "mower_history.c" "bno080_link.c"
                        INCLUDE_DIRS "."
                        REQUIRES app_update driver esp_driver_i2c esp_driver_i2s
                                 esp_driver_sdmmc esp_event esp_http_server

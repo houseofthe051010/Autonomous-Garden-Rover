@@ -1,0 +1,13 @@
+diff --git a/Firmware/Board/v3/Inc/board.h b/Firmware/Board/v3/Inc/board.h
+index 6503e1d..1fb1a8b 100644
+--- a/Firmware/Board/v3/Inc/board.h
++++ b/Firmware/Board/v3/Inc/board.h
+@@ -118,6 +118,7 @@ static const int current_meas_hz = CURRENT_MEAS_HZ;
+ 
+ #if HW_VERSION_VOLTAGE >= 48
+-#define VBUS_S_DIVIDER_RATIO 19.0f
++// Flipsky/SEQURE ODESC V4.2 56V uses the 11:1 voltage-sense divider.
++#define VBUS_S_DIVIDER_RATIO 11.0f
+ #elif HW_VERSION_VOLTAGE == 24
+ #define VBUS_S_DIVIDER_RATIO 11.0f
+ #else
