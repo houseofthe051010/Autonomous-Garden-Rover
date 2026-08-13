@@ -1,6 +1,6 @@
 # Autonomous Garden Rover
 
-This is my prototype garden rover: a mobile platform for carrying tools, moving a hose, and eventually navigating between garden beds on its own. The current version can be driven from a phone or handheld controller and has separate controllers for its drivetrain, stepper mechanisms, and hose valve.
+An open hardware and firmware project for a prototype garden rover: a mobile platform for carrying tools, moving a hose, and eventually navigating between garden beds on its own. The current version can be driven from a phone or handheld controller and has separate controllers for its drivetrain, stepper mechanisms, and hose valve.
 
 The main controller is a Waveshare ESP32-P4. Its onboard ESP32-C6 provides Wi-Fi, while UART links connect the drivetrain and stepper controllers.
 
@@ -24,7 +24,7 @@ The ESP32-P4 runs the web interface and coordinates the rover. The STM32 handles
 
 ## Bill of materials
 
-| Item | Qty. | Unit price | Shipping | Line total | Link |
+| Item | Qty. | Unit price | Shipping | Total | Link |
 | --- | ---: | ---: | ---: | ---: | --- |
 | Waveshare ESP32-P4-WIFI6 development board | 1 | $26.87 | $0.00 | $26.87 | [Amazon](https://www.amazon.com/dp/B0FM3SPXZG) |
 | Steelworks 3/4 in × 8 ft aluminum channel | 2 | $19.98 | $0.00 | $39.96 | [Lowe's](https://www.lowes.com/pd/Steelworks-3-4-in-W-x-8-ft-L-Mill-Finished-Aluminum-Weldable-Trim-Channel/3058185) |
@@ -33,13 +33,22 @@ The ESP32-P4 runs the web interface and coordinates the rover. The STM32 handles
 | BTS7960 high-current motor driver board | 2 | $5.56 | $0.00 | $11.12 | [AliExpress](https://www.aliexpress.us/item/3256812145540065.html) |
 | DS3230 PRO drivetrain servo motor | 1 | $51.37 | $0.00 | $51.37 | [AliExpress](https://www.aliexpress.us/item/3256808314550897.html) |
 | STEPPERONLINE NEMA 17 stepper motors (3-pack) | 1 | $25.99 | $0.00 | $25.99 | [Amazon](https://www.amazon.com/dp/B0B38GHRH8) |
-| Arduino Nano + A4988 stepper-controller kit | 1 | $8.76 | $0.00 | $8.76 | [AliExpress](https://www.aliexpress.us/item/3256805832366199.html) |
+| CNC controller/stepper driver board (12-24 VDC) | 1 | $22.99 | $0.00 | $22.99 | [Amazon](https://www.amazon.com/Cutter-Control-PCBLaser-Engraver-12%E2%80%9124VDC/dp/B0CCVSMGXR/ref=sr_1_8?crid=3AAATVZPSOA2F&dib=eyJ2IjoiMSJ9.aWzcw_WIA8asa20FQSchbt_OHEjmR2H9c02dW500VTK0Zh7viqR8UD-O2liKhXq518VuWrnsAnzvrFg0OpocwPySXmTESd6QuvwzjMqyQpFbEy9nW_tIZf2RHFWTH51NieJmsNjF5AOFKCcgoPFKMQ1kMiat9qz9cC0JR4CG_JgIMWaK4w8S-mu0iLdcvP7TOwW_SIvHBkkTu-KY2cPFMXc6mGlgN_qlOfMjWE7K1dtaOljvCJsbDiK9EfR1HFKnh1Ub_iFOt6-cyxlZCrM-DfQMENAL4w00ucOnpZhGvS4.qlJW6awkxNKtk6nr6GXA36CZ6CU4FdrNQX-PGFT0lCo&dib_tag=se&keywords=cnc+mainboard&qid=1786660258&sprefix=cnc+mainboar%2Caps%2C106&sr=8-8) |
+| EONO PETG 3D printer filament 1 kg black | 2 | $9.99 | $0.00 | $19.98 | [Amazon](https://www.amazon.com/EONO3D-Printer-Filament-1-75mm-2-2lbs/dp/B0G2BQQ5RT/ref=sr_1_1_sspa?crid=1L2ZTSMFNQU33&dib=eyJ2IjoiMSJ9.SEBI8_4wrU3elsHKfGW2ERnsN8KTs5kD7BhyZ9y__Z3QMtZ2FN7r_UnCcOA2tX0kFXVnp_JkbhH5ToHCJwa6H5mphhIVeCnlmKcQWw7EuqJqzap2wdZuLar07Rl_8Vn17IGjlAW7Z-r7gR4lC7Dtfe0nnChFDHjhZpz0rPiA5ZrW-2Vcxv6pA8Yn9m5KewAWe7rTjt5I6TuVCNnVJ1Y59HKh0GpZ1HSDrctdb1M_Mb8.zM1CrTE7JZozW5RqAC32XgZVFvmBgX-H2YCaIrZXDgk&dib_tag=se&keywords=petg+1kg&qid=1786660120&sprefix=petg+1kg%2Caps%2C128&sr=8-1-spons&sp_csd=d2lkZ2V0TmFtZT1zcF9hdGY&psc=1) |
+| 608 sealed steel bearings (20-pack) | 1 | $4.99 | $0.00 | $4.99 | [Amazon](https://www.amazon.com/Bearings-Premium-Steel-Sealed-Groove/dp/B0GX14YCFF/ref=sr_1_4?crid=10SNBKND149OQ&dib=eyJ2IjoiMSJ9.qWnyKcrC2gR1Mn2qmoQKOLT5AfvFyiZh06vPG-1zIPZez2VPXJQstfndu2ylGIEzapGf_3S58rWXK_9iR2qQ6GoZ9p_QSe4PqkSosthnsG6tbFhDlB-f5Zw_XfHw5twSB0SPWddbqdhwubVlA6fgAF-BLxibDqNPZHplWfyIEbFXKYd1u3x2aa1H0P1P9q2HaSQwlbPOQNzS8LIG2GRRPwsEuo-iG6U_rxuGc01EDqQ.OQoMtqLRcUuYDn2x0hnL31AfVoy9-2m7k8DtXQWT360&dib_tag=se&keywords=608%2Bbearings&qid=1786660407&sprefix=608%2Bbearings%2Caps%2C116&sr=8-4&th=1) |
+| M3 screw kit (420-piece) | 1 | $8.98 | $0.00 | $8.98 | [Amazon](https://www.amazon.com/mxuteuk-420PCS-Screws-Socket-Wrench/dp/B0CSWD34KJ/ref=sr_1_8?crid=2EJ1MY8ARTFXO&dib=eyJ2IjoiMSJ9.mYqaF0B5tSbDeR49-ETzhwFfe-oW7XxaeFRt9f46-e0V6_ZIBIcWASPbMRPBz4MyZrarI0rTHsknSqSSA2Mv1c6gnKyHECdQ_mmvmfMkOmNTksfWn0dZaOG6Fq7Ao5GJKvRxG87OZhPjxuORRALFMlQedBTmzZiuwIRT_DwQbBebX8KVN70JGWwkieWeQChzPVrv0dhuZbYq25uJzkez_hJws5quPnK4NVaVnPXWPZI.nNFLVrEusWX8W3KP-ABp5YueLbETjq74Xuxoufqo8Lk&dib_tag=se&keywords=m3%2Bscrew%2B50mm&qid=1786660454&sprefix=m3%2Bscrew%2B50mm%2Caps%2C134&sr=8-8&th=1) |
 | Flipsky ODESC v4.2 24 V single-axis controller | 1 | $39.99 | $0.00 | $39.99 | [Amazon](https://www.amazon.com/dp/B0CB64MVHC) |
-| **Estimated total** |  |  |  | **$245.31** | |
-
-The machine-readable version is in [`bom.csv`](bom.csv). Prices were checked on August 7, 2026 and are before tax. Shipping is only included where it was known. Amazon did not have an ODESC v3.6 under $40, so the BOM uses the cheapest in-stock ODESC listing I found: the $39.99 Flipsky v4.2 24 V single-axis board. It is intended for the experimental BLDC path; the current dual drive controller uses the STM32 and BTS7960 boards.
-
+| 22 AWG wire (10 m) | 1 | $2.81 | $0.00 | $2.81 | [AliExpress](https://www.aliexpress.us/item/3256801511977665.html) |
+| 36 V 8 Ah lithium battery | 1 | $80.00 | $0.00 | $80.00 | [Amazon](https://www.amazon.com/SHEWAIHE-Lithium-Battery-Charger-Providing/dp/B0GWMQY5NT) |
+| 20 A buck converter | 2 | $3.58 | $0.00 | $7.16 | [AliExpress](https://www.aliexpress.us/item/3256808333733098.html) |
+| XL4005 buck converter | 1 | $1.99 | $0.00 | $1.99 | [AliExpress](https://www.aliexpress.us/item/3256808679872256.html) |
+| MG996 servo motor | 1 | $3.44 | $0.00 | $3.44 | [AliExpress](https://www.aliexpress.us/item/3256802804659030.html) |
+| ESP32-WROOM-32 development board with U.FL | 1 | $7.32 | $0.00 | $7.32 | [AliExpress](https://www.aliexpress.us/item/3256807142919728.html) |
+| **Estimated total** |  |  |  | **$396.21** | |
 ## Firmware
+
+For a fresh checkout and build instructions for every controller, start with
+the [build-it-yourself guide](BUILDING.md).
 
 The main ESP32-P4 firmware uses ESP-IDF 6.0 or newer:
 
@@ -70,6 +79,7 @@ The Ender-3/GD32 stepper firmware is flashed by microSD. Its build and flashing 
 | [`firmware/gd32-stepper/`](firmware/gd32-stepper/README.md) | Three-axis stepper firmware for the Ender-3 controller |
 | [`firmware/esp32-hose/`](firmware/esp32-hose/README.md) | Hose-valve controller |
 | [`docs/`](docs/README.md) | Wiring, architecture, protocols, and safety notes |
+| [`diagnostics/`](diagnostics/README.md) | Dated commissioning captures and incident notes |
 | [`legacy/`](legacy/README.md) | Earlier Raspberry Pi code and test programs |
 
 ## Current status
@@ -80,4 +90,4 @@ This is prototype robotics hardware. Test it with the wheels raised, keep clear 
 
 ## License
 
-My original code and documentation are released under the [MIT License](LICENSE). The Marlin-derived stepper patches and binaries keep their upstream GPL license under [`LICENSES/`](LICENSES/).
+Original project code and documentation are released under the [MIT License](LICENSE). Some bundled firmware is derived from third-party projects and retains its own license; see [third-party notices](THIRD_PARTY_NOTICES.md) before redistributing or modifying it. The Marlin-derived stepper patches and binaries are GPL-3.0-only.
