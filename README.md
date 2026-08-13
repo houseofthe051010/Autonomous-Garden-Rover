@@ -4,6 +4,10 @@ An open hardware and firmware project for a prototype garden rover: a mobile pla
 
 The main controller is a Waveshare ESP32-P4. Its onboard ESP32-C6 provides Wi-Fi, while UART links connect the drivetrain and stepper controllers.
 
+## Demo video
+
+[Watch the rover mow grass and water plants](https://youtu.be/P-olpegfmmU?si=Mag2Q_cvqoKTUKmW)
+
 ## How it works
 
 ```text
@@ -79,7 +83,6 @@ The Ender-3/GD32 stepper firmware is flashed by microSD. Its build and flashing 
 | [`firmware/gd32-stepper/`](firmware/gd32-stepper/README.md) | Three-axis stepper firmware for the Ender-3 controller |
 | [`firmware/esp32-hose/`](firmware/esp32-hose/README.md) | Hose-valve controller |
 | [`docs/`](docs/README.md) | Wiring, architecture, protocols, and safety notes |
-| [`diagnostics/`](diagnostics/README.md) | Dated commissioning captures and incident notes |
 | [`legacy/`](legacy/README.md) | Earlier Raspberry Pi code and test programs |
 
 ## Current status

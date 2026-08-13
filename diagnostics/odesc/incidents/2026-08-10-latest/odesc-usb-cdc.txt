@@ -1,5 +1,0 @@
-ds b'DS 1 97577 0 0 0\r\n'
-da 0 b'DA 0 0 5f 1 0\r\n'
-db 0 b'DB 0 22 40 0 0\r\n'
-dc 0 b'DC 0 0 0 0 0\r\n'
-dd 0 b'DD 0 0.000 956cb37f\r\n'
