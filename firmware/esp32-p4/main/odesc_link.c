@@ -52,8 +52,13 @@
 #define ODESC_BLACKBOX_MESSAGE_SIZE 104
 #define ODESC_HISTORY_RECORDS 96
 #define ODESC_HISTORY_WINDOW_MS 60000
+#define ODESC_CALIBRATION_CURRENT_A 5.0f
+#define ODESC_CALIBRATION_TIMEOUT_MS 25000
+#define ODESC_BACKUP_PHASE_RESISTANCE_OHM 0.0690269023180008f
+#define ODESC_BACKUP_PHASE_INDUCTANCE_H 2.2878850359120406e-05f
 
 #define AXIS_STATE_IDLE 1
+#define AXIS_STATE_MOTOR_CALIBRATION 4
 #define AXIS_STATE_SENSORLESS_CLOSED_LOOP 8
 #define INPUT_MODE_VEL_RAMP 2
 
@@ -1663,6 +1668,194 @@ static esp_err_t state_handler(httpd_req_t *request)
     return status_response(request);
 }
 
+static esp_err_t calibration_handler(httpd_req_t *request)
+{
+    int axis;
+    if (!request_axis(request, &axis)) {
+        return httpd_resp_send_err(request, HTTPD_400_BAD_REQUEST, "bad axis");
+    }
+
+    bool okay = false;
+    bool entered = false;
+    int axis_state = -1;
+    int system_error = 0;
+    int axis_error = 0;
+    int motor_error = 0;
+    int controller_error = 0;
+    int estimator_error = 0;
+    int calibrated = 0;
+    float phase_resistance = 0.0f;
+    float phase_inductance = 0.0f;
+    float saved_phase_resistance = 0.0f;
+    float saved_phase_inductance = 0.0f;
+    int saved_pre_calibrated = 0;
+    char restore_text[8] = {0};
+    bool restore_backup = query_value(request, "restore", restore_text,
+                                      sizeof(restore_text)) &&
+                          atoi(restore_text) != 0;
+    char error[160] = {0};
+
+    if (xSemaphoreTake(io_mutex, pdMS_TO_TICKS(30000)) != pdTRUE) {
+        snprintf(error, sizeof(error), "ODESC UART busy");
+    } else {
+        okay = set_idle_locked(axis);
+        if (okay && !restore_backup) {
+            okay = query_int_locked("axis0.motor.config.pre_calibrated",
+                                    &saved_pre_calibrated) &&
+                   query_float_locked("axis0.motor.config.phase_resistance",
+                                      &saved_phase_resistance) &&
+                   query_float_locked("axis0.motor.config.phase_inductance",
+                                      &saved_phase_inductance) &&
+                   query_int_locked("error", &system_error) &&
+                   query_int_locked("axis0.current_state", &axis_state) &&
+                   query_int_locked("axis0.error", &axis_error) &&
+                   query_int_locked("axis0.motor.error", &motor_error) &&
+                   query_int_locked("axis0.controller.error", &controller_error) &&
+                   query_int_locked("axis0.sensorless_estimator.error", &estimator_error);
+        }
+        if (!okay) {
+            snprintf(error, sizeof(error), "Could not verify M0 before calibration");
+        } else if (!restore_backup &&
+                   (axis_state != AXIS_STATE_IDLE || system_error || axis_error ||
+                   motor_error || controller_error || estimator_error)) {
+            okay = false;
+            snprintf(error, sizeof(error),
+                     "Calibration blocked: state=%d errors=%d/%d/%d/%d/%d",
+                     axis_state, system_error, axis_error, motor_error,
+                     controller_error, estimator_error);
+        }
+
+        if (okay && restore_backup) {
+            okay = write_property_float_locked(axis,
+                       "motor.config.phase_resistance",
+                       ODESC_BACKUP_PHASE_RESISTANCE_OHM) &&
+                   write_property_float_locked(axis,
+                       "motor.config.phase_inductance",
+                       ODESC_BACKUP_PHASE_INDUCTANCE_H) &&
+                   write_property_float_locked(axis,
+                       "motor.config.calibration_current",
+                       ODESC_CALIBRATION_CURRENT_A) &&
+                   write_property_locked(axis, "motor.config.pre_calibrated", 1) &&
+                   send_locked("w error 0") &&
+                   write_property_locked(axis, "error", 0) &&
+                   write_property_locked(axis, "motor.error", 0) &&
+                   write_property_locked(axis, "controller.error", 0) &&
+                   write_property_locked(axis, "sensorless_estimator.error", 0) &&
+                   query_int_locked("axis0.current_state", &axis_state) &&
+                   query_int_locked("axis0.motor.config.pre_calibrated", &calibrated) &&
+                   query_float_locked("axis0.motor.config.phase_resistance",
+                                      &phase_resistance) &&
+                   query_float_locked("axis0.motor.config.phase_inductance",
+                                      &phase_inductance) &&
+                   query_int_locked("error", &system_error) &&
+                   query_int_locked("axis0.error", &axis_error) &&
+                   query_int_locked("axis0.motor.error", &motor_error) &&
+                   query_int_locked("axis0.controller.error", &controller_error) &&
+                   query_int_locked("axis0.sensorless_estimator.error", &estimator_error);
+            okay = okay && axis_state == AXIS_STATE_IDLE && calibrated &&
+                   fabsf(phase_resistance - ODESC_BACKUP_PHASE_RESISTANCE_OHM) < 1e-6f &&
+                   fabsf(phase_inductance - ODESC_BACKUP_PHASE_INDUCTANCE_H) < 5e-7f &&
+                   !system_error && !axis_error && !motor_error &&
+                   !controller_error && !estimator_error;
+            if (!okay) snprintf(error, sizeof(error),
+                                "Could not restore validated M0 calibration backup");
+        }
+
+        if (okay && !restore_backup) {
+            okay = write_property_float_locked(axis,
+                       "motor.config.calibration_current",
+                       ODESC_CALIBRATION_CURRENT_A) &&
+                   write_property_locked(axis, "motor.config.pre_calibrated", 0) &&
+                   write_property_locked(axis, "requested_state",
+                                         AXIS_STATE_MOTOR_CALIBRATION);
+            if (!okay) snprintf(error, sizeof(error),
+                                "Could not start guarded M0 calibration");
+        }
+
+        int64_t deadline = now_ms() + ODESC_CALIBRATION_TIMEOUT_MS;
+        while (okay && !restore_backup && now_ms() < deadline) {
+            vTaskDelay(pdMS_TO_TICKS(250));
+            if (!query_int_locked("axis0.current_state", &axis_state)) {
+                okay = false;
+                snprintf(error, sizeof(error),
+                         "Lost ODESC response during calibration");
+                break;
+            }
+            if (axis_state == AXIS_STATE_MOTOR_CALIBRATION) entered = true;
+            if (entered && axis_state == AXIS_STATE_IDLE) break;
+        }
+        if (okay && !restore_backup &&
+            (!entered || axis_state != AXIS_STATE_IDLE)) {
+            okay = false;
+            snprintf(error, sizeof(error), "M0 calibration timed out");
+        }
+
+        if (okay && !restore_backup) {
+            okay = query_int_locked("error", &system_error) &&
+                   query_int_locked("axis0.error", &axis_error) &&
+                   query_int_locked("axis0.motor.error", &motor_error) &&
+                   query_int_locked("axis0.controller.error", &controller_error) &&
+                   query_int_locked("axis0.sensorless_estimator.error", &estimator_error) &&
+                   query_int_locked("axis0.motor.is_calibrated", &calibrated) &&
+                   query_float_locked("axis0.motor.config.phase_resistance",
+                                      &phase_resistance) &&
+                   query_float_locked("axis0.motor.config.phase_inductance",
+                                      &phase_inductance);
+            if (!okay || system_error || axis_error || motor_error ||
+                controller_error || estimator_error || !calibrated ||
+                !isfinite(phase_resistance) || phase_resistance <= 0.0f ||
+                !isfinite(phase_inductance) || phase_inductance <= 0.0f) {
+                okay = false;
+                snprintf(error, sizeof(error),
+                         "Calibration failed: calibrated=%d R=%.6g L=%.6g errors=%d/%d/%d/%d/%d",
+                         calibrated, phase_resistance, phase_inductance,
+                         system_error, axis_error, motor_error,
+                         controller_error, estimator_error);
+            }
+        }
+        if (okay && !restore_backup) {
+            okay = write_property_locked(axis, "motor.config.pre_calibrated", 1);
+            if (!okay) snprintf(error, sizeof(error),
+                                "Calibration passed but pre-calibrated write failed");
+        }
+        if (!okay && !restore_backup && saved_pre_calibrated &&
+            isfinite(saved_phase_resistance) && saved_phase_resistance > 0.0f &&
+            isfinite(saved_phase_inductance) && saved_phase_inductance > 0.0f) {
+            write_property_float_locked(axis, "motor.config.phase_resistance",
+                                        saved_phase_resistance);
+            write_property_float_locked(axis, "motor.config.phase_inductance",
+                                        saved_phase_inductance);
+            write_property_locked(axis, "motor.config.pre_calibrated", 1);
+        }
+        if (!okay) set_idle_locked(axis);
+        xSemaphoreGive(io_mutex);
+    }
+
+    xSemaphoreTake(state_mutex, portMAX_DELAY);
+    state.active_axis = -1;
+    state.motion_deadline_ms = 0;
+    state.command_velocity_turns_s = 0.0f;
+    snprintf(state.last_command, sizeof(state.last_command),
+             restore_backup ? "restore validated M0 calibration backup" :
+                              "guarded M0 motor calibration 5.0 A");
+    if (okay) {
+        state.last_error[0] = 0;
+        snprintf(state.last_action, sizeof(state.last_action),
+                 restore_backup ?
+                 "M0 calibration backup restored: R=%.6g ohm L=%.6g H; IDLE" :
+                 "M0 calibration passed: R=%.6g ohm L=%.6g H; IDLE",
+                 phase_resistance, phase_inductance);
+    } else {
+        snprintf(state.last_error, sizeof(state.last_error), "%s", error);
+    }
+    xSemaphoreGive(state_mutex);
+    blackbox_log("CALIBRATION %s current=%.1fA R=%.6g L=%.6g %s",
+                 okay ? "OK" : "FAILED", ODESC_CALIBRATION_CURRENT_A,
+                 phase_resistance, phase_inductance, error);
+    if (!okay) httpd_resp_set_status(request, "409 Conflict");
+    return status_response(request);
+}
+
 static esp_err_t sensorless_start_handler(httpd_req_t *request)
 {
     int axis;
@@ -2200,6 +2393,8 @@ esp_err_t odesc_link_register_routes(httpd_handle_t server)
         {.uri = "/api/odrive/regen", .method = HTTP_GET,
          .handler = regen_limit_handler},
         {.uri = "/api/odrive/state", .method = HTTP_GET, .handler = state_handler},
+        {.uri = "/api/odrive/calibrate", .method = HTTP_GET,
+         .handler = calibration_handler},
         {.uri = "/api/odrive/sensorless/start", .method = HTTP_GET,
          .handler = sensorless_start_handler},
         {.uri = "/api/odrive/velocity", .method = HTTP_GET, .handler = velocity_handler},

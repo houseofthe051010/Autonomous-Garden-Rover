@@ -529,14 +529,20 @@ static esp_err_t ota_upload_handler(httpd_req_t *request)
         return httpd_resp_send_500(request);
     }
     int remaining = request->content_len;
+    unsigned receive_timeouts = 0;
     while (remaining > 0) {
         int received = httpd_req_recv(request, (char *)buffer,
                                       remaining > OTA_RX_CHUNK ? OTA_RX_CHUNK : remaining);
-        if (received == HTTPD_SOCK_ERR_TIMEOUT) continue;
+        if (received == HTTPD_SOCK_ERR_TIMEOUT) {
+            if (++receive_timeouts < 8) continue;
+            result = ESP_ERR_TIMEOUT;
+            break;
+        }
         if (received <= 0) {
             result = ESP_FAIL;
             break;
         }
+        receive_timeouts = 0;
         result = esp_ota_write(handle, buffer, received);
         if (result != ESP_OK) break;
         remaining -= received;
