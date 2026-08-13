@@ -88,6 +88,23 @@ The ESP32-P4 host, STM32 drive link, GD32 stepper link, web controls, microSD au
 
 This is prototype robotics hardware. Test it with the wheels raised, keep clear of moving mechanisms, verify every pin before applying power, and keep an independent power disconnect within reach.
 
+# Third-party notices
+
+The repository-level [MIT License](LICENSE) applies to original project code
+and documentation only. It does not replace licenses in bundled or derived
+third-party material.
+
+| Material | Location | License / notice |
+| --- | --- | --- |
+| ODrive-derived ODESC source | [`firmware/odesc-v42/source/`](firmware/odesc-v42/source/) | MIT; retain the included [ODrive notice](firmware/odesc-v42/source/LICENSE.md) |
+| Marlin-derived GD32 stepper patch, display assets, and binary | [`firmware/gd32-stepper/`](firmware/gd32-stepper/) | GPL-3.0-only; full text in [`LICENSES/Marlin-GPL-3.0.txt`](LICENSES/Marlin-GPL-3.0.txt) |
+| Historical Marlin prototype artifacts | [`legacy/prototypes/gd32-marlin-stepper/`](legacy/prototypes/gd32-marlin-stepper/) | GPL-3.0-only; see the included documentation and license text |
+
+Before copying, modifying, or redistributing third-party material, review the
+license located with that material. Add a notice here when introducing new
+vendored or derived code.
+
+
 ## License
 
 Original project code and documentation are released under the [MIT License](LICENSE). Some bundled firmware is derived from third-party projects and retains its own license; see [third-party notices](THIRD_PARTY_NOTICES.md) before redistributing or modifying it. The Marlin-derived stepper patches and binaries are GPL-3.0-only.
