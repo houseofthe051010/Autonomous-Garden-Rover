@@ -1,4 +1,3 @@
-# Editors and operating systems
 .DS_Store
 Thumbs.db
 *.swp
@@ -9,13 +8,11 @@ Thumbs.db
 /legacy/
 /docs/
 
-# Python
 __pycache__/
 *.py[cod]
 .venv/
 venv/
 
-# ESP-IDF and CMake
 build/
 managed_components/
 sdkconfig
@@ -24,10 +21,8 @@ CMakeCache.txt
 CMakeFiles/
 compile_commands.json
 
-# PlatformIO
 .pio/
 
-# Local credentials and device material
 **/rover_control_key.h
 *.pem
 *.key
@@ -36,7 +31,6 @@ compile_commands.json
 .env.*
 !.env.example
 
-# Hardware backups and local captures
 diagnostics/
 *-factory-backup*.bin
 *.log
