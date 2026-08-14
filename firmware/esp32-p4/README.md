@@ -197,7 +197,7 @@ matching `COUNT_DONE` frame arrives.
 
 ## Installed tank orientation
 
-The latest physical direction test supersedes the older Raspberry Pi mapping:
+The latest physical direction test establishes the installed drivetrain mapping:
 
 | Track motion | STM32 output |
 | --- | --- |

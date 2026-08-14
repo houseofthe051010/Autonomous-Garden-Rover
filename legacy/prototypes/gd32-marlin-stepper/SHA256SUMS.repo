@@ -1,5 +1,0 @@
-b51e242a77e57c88dd8caeb84f8ecd6ea689b5c5daf4c32a2e767d8b47c27cab  ender3-firmware/ALLDRV1.BIN
-bb16b211d97698977fd40ea7511a6c284e5310da1a3c2e12c054cbce13e5bf96  ender3-firmware/marlin-2.1.2.5-stepper-controller.patch
-5e3db24d4ada5fff72f5be59d68bcd833f24c9c5a123d972ebd9d33e8ad3453e  ender3-firmware/marlin-assets/_Bootscreen.h
-c3c40eef368296020ce4e4bc9f6dab98b2b7133d17ca5fca408a3d24a0f5a567  ender3-firmware/marlin-assets/_Statusscreen.h
-bf4503835cd79dbb5637acf40c6839575c0a757397f250c67dd141f7e0860e13  esp32-micropython/main.py

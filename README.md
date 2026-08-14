@@ -49,7 +49,7 @@ Waveshare ESP32-P4 + ESP32-C6 ---- microSD / microphone / speaker
 | Heading | BNO080 | Magnetometer heading used by the scripted heading-hold loop |
 | Hose valve | ESP32-WROOM-32 + modified MG996 | Wireless valve actuation with potentiometer position feedback |
 
-The current ESP32-P4 firmware lives in [`firmware/esp32-p4/`](firmware/esp32-p4/README.md). The earlier Raspberry Pi 5 controller and commissioning tools remain in [`legacy/`](legacy/README.md) so the build history is reproducible.
+The current ESP32-P4 firmware lives in [`firmware/esp32-p4/`](firmware/esp32-p4/README.md).
 
 ### Block-level electrical schematic
 
@@ -101,7 +101,7 @@ Major iterations included:
 2. Converting four DS3230 servos into geared drive motors with encoder feedback.
 3. Replacing the original razor blades with string line after destructive lawn tests.
 4. Reprinting the turret worm drive, strengthening its pitch shaft, and adding a modular yaw gearbox.
-5. Replacing unreliable motor drivers, rebuilding after a vibration-induced short circuit, and migrating the host from Raspberry Pi 5 to ESP32-P4.
+5. Replacing unreliable motor drivers, rebuilding after a vibration-induced short circuit, and consolidating control on the ESP32-P4 host.
 6. Designing a motorized actuator around the existing outdoor faucet instead of adding an unreliable inline valve.
 7. Adding UART subsystem links, OTA updates, voice recognition/feedback, and scripted heading-controlled demonstrations.
 
@@ -246,7 +246,7 @@ The hose valve is a separate subsystem mounted at the faucet. Assemble the conti
 | --- | --- |
 | ![Rover electronics during subsystem integration](https://cdn.hackclub.com/019f769f-fdfa-77c3-b291-9a491c0dfe77/image.png) | ![Weather-resistant ESP32 hose actuator](https://cdn.hackclub.com/019fc962-4971-7d67-b8b5-c9f91bc0d1e1/image.png) |
 
-The photos and design decisions above come from the [complete Macondo build journal](https://macondo.hackclub.com/projects/9276), including the failed 1.5:1 drivetrain, blade tests, gearbox rebuilds, short-circuit repair, and migration from Raspberry Pi 5 to ESP32-P4.
+The photos and design decisions above come from the [complete Macondo build journal](https://macondo.hackclub.com/projects/9276), including the failed 1.5:1 drivetrain, blade tests, gearbox rebuilds, short-circuit repair, and ESP32-P4 electronics integration.
 
 ### Wire the rover
 
@@ -440,7 +440,6 @@ The output is created under `build/`. A successful build is not proof that the f
 | [`firmware/gd32-stepper/`](firmware/gd32-stepper/README.md) | Three-axis stepper firmware for the Ender-3 controller |
 | [`firmware/esp32-hose/`](firmware/esp32-hose/README.md) | Hose-valve controller |
 | [`docs/`](docs/README.md) | Wiring, architecture, protocols, and safety notes |
-| [`legacy/`](legacy/README.md) | Earlier Raspberry Pi code and test programs |
 
 ## Current status
 
@@ -464,7 +463,6 @@ third-party material.
 | --- | --- | --- |
 | ODrive-derived ODESC source | [`firmware/odesc-v42/source/`](firmware/odesc-v42/source/) | MIT; retain the included [ODrive notice](firmware/odesc-v42/source/LICENSE.md) |
 | Marlin-derived GD32 stepper patch, display assets, and binary | [`firmware/gd32-stepper/`](firmware/gd32-stepper/) | GPL-3.0-only; full text in [`LICENSES/Marlin-GPL-3.0.txt`](LICENSES/Marlin-GPL-3.0.txt) |
-| Historical Marlin prototype artifacts | [`legacy/prototypes/gd32-marlin-stepper/`](legacy/prototypes/gd32-marlin-stepper/) | GPL-3.0-only; see the included documentation and license text |
 
 Before copying, modifying, or redistributing third-party material, review the
 license located with that material. Add a notice here when introducing new
