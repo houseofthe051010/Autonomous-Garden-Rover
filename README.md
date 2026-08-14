@@ -55,7 +55,7 @@ The current ESP32-P4 firmware lives in [`firmware/esp32-p4/`](firmware/esp32-p4/
 
 The block-level schematic shows the power rails, host computer, motor-control boards, sensors, and UART links used by the modular rover electronics.
 
-[![Autonomous Garden Rover block-level electrical schematic](Schematics/Block-level%20schematic/rover.svg)](Schematics/Block-level%20schematic/rover.svg)
+[![Autonomous Garden Rover block-level electrical schematic](pictures/block%20level%20schematic%20picture%20kicad.png)](pictures/block%20level%20schematic%20picture%20kicad.png)
 
 The editable KiCad source is in [`Schematics/Block-level schematic/`](Schematics/Block-level%20schematic/).
 
@@ -67,7 +67,7 @@ An optional [`combined single-host mainboard prototype`](Schematics/Prototype%20
 
 The combined board is substantially more expensive than building the individual subsystem boards and joining them with UART. Its large four-layer PCB, double-sided SMD population, high component count, and specialized motor-control parts increase fabrication and assembly costs. The checked-in KiCad and Gerber files are a prototype/quotation design; the modular UART architecture remains the lower-cost and more repairable configuration used by the rover.
 
-![KiCad 3D render of the optional combined rover control PCB](assets/prototype%20single%20board%20computer%20pcb%20layout.png)
+![KiCad 3D render of the optional combined rover control PCB](pictures/prototype%20single%20board%20computer%20pcb%20layout.png)
 
 ## Mechanical design
 
@@ -113,7 +113,7 @@ The repository includes the editable Fusion designs and exports; the Macondo jou
 
 ## CAD and fabrication files
 
-![Complete Autonomous Garden Rover Fusion 360 assembly](assets/full%20mower%20assembly%20render%20fusion360.png)
+![Complete Autonomous Garden Rover Fusion 360 assembly](pictures/full%20mower%20assembly%20render%20fusion360.png)
 
 | Location | Contents |
 | --- | --- |
