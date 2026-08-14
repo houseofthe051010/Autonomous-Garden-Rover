@@ -2,6 +2,8 @@
 
 An open-source outdoor robot that can **mow grass and water a garden**. I built the rover around an aluminum-channel chassis, 10-inch recycled Power Wheels tires, custom 3D-printed transmissions, a height-adjustable string mower, and a two-axis hose turret. An ESP32-P4 coordinates the drivetrain, mower, steppers, IMU, audio, web controls, and the separate wireless hose-valve controller.
 
+I normally spend about two hours mowing the grass every two weeks, plus several more hours watering the garden. I wanted to build something that could take those repetitive jobs off my schedule while giving me a reason to learn outdoor robotics, mechanical design, motor control, and distributed embedded systems. The rover combines both jobs so one machine can maintain the yard instead of requiring a separate project for each chore.
+
 This repository contains the firmware, wiring documentation, full Fusion 360 assemblies, neutral STEP exports, individual STEP parts, and 72 deduplicated printable STL files used to build the prototype.
 
 [**Watch the finished demo**](https://youtu.be/P-olpegfmmU) · [**Read the complete 128-hour Macondo build journal**](https://macondo.hackclub.com/projects/9276) · [**Browse the CAD**](CAD/)
@@ -65,6 +67,8 @@ An optional [`combined single-host mainboard prototype`](Schematics/Prototype%20
 
 The combined board is substantially more expensive than building the individual subsystem boards and joining them with UART. Its large four-layer PCB, double-sided SMD population, high component count, and specialized motor-control parts increase fabrication and assembly costs. The checked-in KiCad and Gerber files are a prototype/quotation design; the modular UART architecture remains the lower-cost and more repairable configuration used by the rover.
 
+![KiCad 3D render of the optional combined rover control PCB](assets/prototype%20single%20board%20computer%20pcb%20layout.png)
+
 ## Mechanical design
 
 ### Drivetrain
@@ -109,6 +113,8 @@ The repository includes the editable Fusion designs and exports; the Macondo jou
 
 ## CAD and fabrication files
 
+![Complete Autonomous Garden Rover Fusion 360 assembly](assets/full%20mower%20assembly%20render%20fusion360.png)
+
 | Location | Contents |
 | --- | --- |
 | [`CAD/Assembly/`](CAD/Assembly/) | Full mower-body Fusion archive, complete STEP assembly, and individual STEP bodies |
@@ -136,24 +142,30 @@ Protocol details and wiring notes are indexed in [`docs/`](docs/README.md).
 | Item | Qty. | Unit price | Shipping | Total | Link |
 | --- | ---: | ---: | ---: | ---: | --- |
 | Waveshare ESP32-P4-WIFI6 development board | 1 | $26.87 | $0.00 | $26.87 | [Amazon](https://www.amazon.com/dp/B0FM3SPXZG) |
-| Steelworks 3/4 in × 8 ft aluminum channel | 2 | $19.98 | $0.00 | $39.96 | [Lowe's](https://www.lowes.com/pd/Steelworks-3-4-in-W-x-8-ft-L-Mill-Finished-Aluminum-Weldable-Trim-Channel/3058185) |
+| Steelworks 3/4 in x 8 ft aluminum channel | 2 | $19.98 | $0.00 | $39.96 | [Lowe's](https://www.lowes.com/pd/Steelworks-3-4-in-W-x-8-ft-L-Mill-Finished-Aluminum-Weldable-Trim-Channel/3058185) |
 | LGXSHOP C6374 170KV sensored BLDC motor | 1 | $29.50 | $10.00 | $39.50 | [Amazon](https://www.amazon.com/dp/B0GR88K1XP) |
 | STM32F103C6T6 Blue Pill development board | 1 | $1.75 | $0.00 | $1.75 | [AliExpress](https://www.aliexpress.us/item/3256809531654480.html) |
 | BTS7960 high-current motor driver board | 2 | $5.56 | $0.00 | $11.12 | [AliExpress](https://www.aliexpress.us/item/3256812145540065.html) |
-| DS3230 PRO drivetrain servo motor | 1 | $51.37 | $0.00 | $51.37 | [AliExpress](https://www.aliexpress.us/item/3256808314550897.html) |
+| DS3230 PRO drivetrain servo motors (4-pack) | 1 | $51.37 | $0.00 | $51.37 | [AliExpress](https://www.aliexpress.us/item/3256808314550897.html) |
 | STEPPERONLINE NEMA 17 stepper motors (3-pack) | 1 | $25.99 | $0.00 | $25.99 | [Amazon](https://www.amazon.com/dp/B0B38GHRH8) |
-| CNC controller/stepper driver board (12-24 VDC) | 1 | $22.99 | $0.00 | $22.99 | [Amazon](https://www.amazon.com/Cutter-Control-PCBLaser-Engraver-12%E2%80%9124VDC/dp/B0CCVSMGXR/ref=sr_1_8?crid=3AAATVZPSOA2F&dib=eyJ2IjoiMSJ9.aWzcw_WIA8asa20FQSchbt_OHEjmR2H9c02dW500VTK0Zh7viqR8UD-O2liKhXq518VuWrnsAnzvrFg0OpocwPySXmTESd6QuvwzjMqyQpFbEy9nW_tIZf2RHFWTH51NieJmsNjF5AOFKCcgoPFKMQ1kMiat9qz9cC0JR4CG_JgIMWaK4w8S-mu0iLdcvP7TOwW_SIvHBkkTu-KY2cPFMXc6mGlgN_qlOfMjWE7K1dtaOljvCJsbDiK9EfR1HFKnh1Ub_iFOt6-cyxlZCrM-DfQMENAL4w00ucOnpZhGvS4.qlJW6awkxNKtk6nr6GXA36CZ6CU4FdrNQX-PGFT0lCo&dib_tag=se&keywords=cnc+mainboard&qid=1786660258&sprefix=cnc+mainboar%2Caps%2C106&sr=8-8) |
+| Stepper controller board (12-24 VDC) | 1 | $22.99 | $0.00 | $22.99 | [Amazon](https://www.amazon.com/dp/B0CCVSMGXR) |
 | EONO PETG 3D printer filament 1 kg black | 2 | $9.99 | $0.00 | $19.98 | [Amazon](https://www.amazon.com/EONO3D-Printer-Filament-1-75mm-2-2lbs/dp/B0G2BQQ5RT/ref=sr_1_1_sspa?crid=1L2ZTSMFNQU33&dib=eyJ2IjoiMSJ9.SEBI8_4wrU3elsHKfGW2ERnsN8KTs5kD7BhyZ9y__Z3QMtZ2FN7r_UnCcOA2tX0kFXVnp_JkbhH5ToHCJwa6H5mphhIVeCnlmKcQWw7EuqJqzap2wdZuLar07Rl_8Vn17IGjlAW7Z-r7gR4lC7Dtfe0nnChFDHjhZpz0rPiA5ZrW-2Vcxv6pA8Yn9m5KewAWe7rTjt5I6TuVCNnVJ1Y59HKh0GpZ1HSDrctdb1M_Mb8.zM1CrTE7JZozW5RqAC32XgZVFvmBgX-H2YCaIrZXDgk&dib_tag=se&keywords=petg+1kg&qid=1786660120&sprefix=petg+1kg%2Caps%2C128&sr=8-1-spons&sp_csd=d2lkZ2V0TmFtZT1zcF9hdGY&psc=1) |
 | 608 sealed steel bearings (20-pack) | 1 | $4.99 | $0.00 | $4.99 | [Amazon](https://www.amazon.com/Bearings-Premium-Steel-Sealed-Groove/dp/B0GX14YCFF/ref=sr_1_4?crid=10SNBKND149OQ&dib=eyJ2IjoiMSJ9.qWnyKcrC2gR1Mn2qmoQKOLT5AfvFyiZh06vPG-1zIPZez2VPXJQstfndu2ylGIEzapGf_3S58rWXK_9iR2qQ6GoZ9p_QSe4PqkSosthnsG6tbFhDlB-f5Zw_XfHw5twSB0SPWddbqdhwubVlA6fgAF-BLxibDqNPZHplWfyIEbFXKYd1u3x2aa1H0P1P9q2HaSQwlbPOQNzS8LIG2GRRPwsEuo-iG6U_rxuGc01EDqQ.OQoMtqLRcUuYDn2x0hnL31AfVoy9-2m7k8DtXQWT360&dib_tag=se&keywords=608%2Bbearings&qid=1786660407&sprefix=608%2Bbearings%2Caps%2C116&sr=8-4&th=1) |
 | M3 screw kit (420-piece) | 1 | $8.98 | $0.00 | $8.98 | [Amazon](https://www.amazon.com/mxuteuk-420PCS-Screws-Socket-Wrench/dp/B0CSWD34KJ/ref=sr_1_8?crid=2EJ1MY8ARTFXO&dib=eyJ2IjoiMSJ9.mYqaF0B5tSbDeR49-ETzhwFfe-oW7XxaeFRt9f46-e0V6_ZIBIcWASPbMRPBz4MyZrarI0rTHsknSqSSA2Mv1c6gnKyHECdQ_mmvmfMkOmNTksfWn0dZaOG6Fq7Ao5GJKvRxG87OZhPjxuORRALFMlQedBTmzZiuwIRT_DwQbBebX8KVN70JGWwkieWeQChzPVrv0dhuZbYq25uJzkez_hJws5quPnK4NVaVnPXWPZI.nNFLVrEusWX8W3KP-ABp5YueLbETjq74Xuxoufqo8Lk&dib_tag=se&keywords=m3%2Bscrew%2B50mm&qid=1786660454&sprefix=m3%2Bscrew%2B50mm%2Caps%2C134&sr=8-8&th=1) |
-| Flipsky ODESC v4.2 24 V single-axis controller | 1 | $39.99 | $0.00 | $39.99 | [Amazon](https://www.amazon.com/dp/B0CB64MVHC) |
+| Flipsky ODESC 56 V v4.2 single-axis controller | 1 | $39.99 | $0.00 | $39.99 | [Amazon](https://www.amazon.com/dp/B0CB64MVHC) |
 | 22 AWG wire (10 m) | 1 | $2.81 | $0.00 | $2.81 | [AliExpress](https://www.aliexpress.us/item/3256801511977665.html) |
-| 36 V 8 Ah lithium battery | 1 | $80.00 | $0.00 | $80.00 | [Amazon](https://www.amazon.com/SHEWAIHE-Lithium-Battery-Charger-Providing/dp/B0GWMQY5NT) |
+| 36 V 10.4 Ah lithium battery with charger and XT60 connector | 1 | $79.99 | $0.00 | $79.99 | [eBay](https://www.ebay.com/itm/318206384216) |
 | 20 A buck converter | 2 | $3.58 | $0.00 | $7.16 | [AliExpress](https://www.aliexpress.us/item/3256808333733098.html) |
 | XL4005 buck converter | 1 | $1.99 | $0.00 | $1.99 | [AliExpress](https://www.aliexpress.us/item/3256808679872256.html) |
 | MG996 servo motor | 1 | $3.44 | $0.00 | $3.44 | [AliExpress](https://www.aliexpress.us/item/3256802804659030.html) |
 | ESP32-WROOM-32 development board with U.FL | 1 | $7.32 | $0.00 | $7.32 | [AliExpress](https://www.aliexpress.us/item/3256807142919728.html) |
-| **Estimated total** |  |  |  | **$396.21** | |
+| BNO080/BNO085 9-DOF sensor module | 1 | $18.99 | $0.00 | $18.99 | [Amazon](https://www.amazon.com/dp/B0HCBRBZ76) |
+| Hello Hobby 3/8 in x 36 in wood dowel | 1 | $0.78 | $0.00 | $0.78 | [Walmart](https://www.walmart.com/ip/684374236) |
+| Tool Bench 40 ft diamond-braid rope with winder | 1 | $1.50 | $0.00 | $1.50 | [Dollar Tree](https://www.dollartree.com/tool-bench-40-ft-diamond-braid-rope-with-winder-1-ct/295406) |
+| **Estimated total** |  |  |  | **$417.47** | |
+
+The battery listing includes its charger and XT60 connector. The M3 kit includes the matching screws and nuts used throughout the printed assemblies. The wheels are printed from the listed PETG rather than purchased separately, and PETG strands are also used as the mower line. The prototype uses the listed 22 AWG wire, with paired conductors run in parallel where additional conductor capacity is needed.
+
 ## Build it yourself
 
 This is the order used to turn the CAD into the physical prototype. Keep the complete [`mower body.step`](CAD/Assembly/mower%20body.step) open as the placement reference and use the files under [`CAD/Individual Printable STLs/`](CAD/Individual%20Printable%20STLs/) as the print queue. The individual STEP exports are useful for measurements and modifications; only the STL tree is intended as the printable-parts list.
@@ -178,7 +190,7 @@ Print the parts by folder so hardware does not get mixed between mechanisms:
 | [`electronics holders/`](CAD/Individual%20Printable%20STLs/electronics%20holders/) | Main host, ODESC, and stepper-controller enclosures |
 | [`hose_control/`](CAD/Individual%20Printable%20STLs/hose_control/) | Separate faucet actuator enclosure and linkage |
 
-PETG was used for the final outdoor drivetrain gears. The heavily loaded turret, mower, and gearbox parts were printed with extra walls; the small channel joints used high infill. Drill and clean printed holes only after checking them against the M3 hardware and bearings.
+All printable parts, including the 10-inch wheels, use the two kilograms of PETG listed in the BOM and were printed on an Anycubic Kobra S1. Use a 0.12 mm layer height, three walls, and 40% infill for general parts. Use 100% infill for gears and other highly loaded power-transmission parts. Orient parts so shafts and fastener loads run across continuous perimeters where possible, and use supports wherever the slicer identifies unsupported overhangs. The mower line is made from PETG filament strands rather than a separately purchased consumable. Drill and clean printed holes only after checking them against the M3 hardware and bearings.
 
 #### 2. Build the aluminum frame first
 
@@ -407,6 +419,18 @@ The output is created under `build/`. A successful build is not proof that the f
 6. Test ODESC M0 without cutting line, then test the separate hose actuator from its controller page.
 7. Confirm every watchdog and `STOP ALL` path before the first ground test. Seal the electronics enclosures only after this complete dry commissioning pass.
 
+### Use the rover
+
+1. Charge the 36 V battery with the included charger, secure the pack in the center cage, and make sure the physical battery disconnect is off before attaching the XT60 connector.
+2. Move the rover outdoors onto a clear test area. Keep people, pets, loose clothing, and debris away from the mower and wheels.
+3. Turn on the battery disconnect and wait for the ESP32-P4 host and subsystem links to initialize.
+4. Connect a phone or computer to the `rover` Wi-Fi access point, then open `http://192.168.4.1/` in a browser.
+5. Check the status page before moving. Confirm that the drivetrain, stepper controller, ODESC, and BNO080 are reporting correctly and that the emergency-stop control is available.
+6. Use the main controls for low-speed driving. Use `/steppers` to position the mower height and hose-turret axes, and `/sensors` to check the mounted IMU heading.
+7. For mowing, set the deck height first, move clear of the cutting area, start the mower, and then drive forward. Stop the mower before approaching, lifting, or servicing the rover.
+8. For watering, attach the hose with enough slack for the full turret range, connect the separate faucet controller, test yaw and pitch at low speed, and only then open the valve.
+9. To shut down, stop the mower and every moving axis in the web interface, use `STOP ALL`, switch off the battery disconnect, and unplug the XT60 connector before maintenance.
+
 ## Repository map
 
 | Folder | Contents |
@@ -423,6 +447,12 @@ The output is created under `build/`. A successful build is not proof that the f
 The physical rover has completed outdoor drive, mowing, watering, turret, and scripted autonomous-sequence demonstrations. The ESP32-P4 host, STM32 drive link, GD32 stepper link, ODESC mower link, BNO080 link, web controls, microSD audio, and hose-control path have all been exercised on the intended hardware. The current autonomous code demonstrates fixed routines; general navigation, obstacle avoidance, and sensor-fused localization are still experimental.
 
 This is prototype robotics hardware. Test it with the wheels raised, keep clear of moving mechanisms, verify every pin before applying power, and keep an independent power disconnect within reach.
+
+## What I would do differently next time
+
+I would use stronger drivetrain motors so the rover has more turning torque and margin on thick or uneven grass. For watering, I would replace the continuously attached garden hose with an onboard tank: the rover could return to a stationary filling point, store water, leave to water the garden, and then come back to refill. That would remove hose drag and make the watering route much less constrained.
+
+With a larger budget, I would also build a custom production PCB that combines the host, power conversion, drivetrain, stepper, sensor, and mower-control electronics. The current modular design uses separate microcontrollers and UART-connected subsystems because it is less expensive and easier to repair, but a validated combined board would reduce wiring and make the final electronics package more compact.
 
 ## Third-party notices
 
