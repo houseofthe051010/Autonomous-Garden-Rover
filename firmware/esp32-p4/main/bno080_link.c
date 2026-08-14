@@ -1036,6 +1036,26 @@ void bno080_link_abort_calibration(void)
     if (active && motion_drive) (void)motion_drive(0, 0, 300, true);
 }
 
+bool bno080_link_get_magnetic_heading(float *heading_deg)
+{
+    if (!heading_deg || !state_mutex) return false;
+    xSemaphoreTake(state_mutex, portMAX_DELAY);
+    bool valid = state.have_magnetic &&
+                 now_ms() - state.last_frame_ms <= BNO_REPORT_TIMEOUT_MS;
+    float magnetic_x = state.magnetic_ut[0];
+    float magnetic_y = state.magnetic_ut[1];
+    float mounting_offset = state.heading_offset_deg;
+    xSemaphoreGive(state_mutex);
+    if (!valid || (!isfinite(magnetic_x) || !isfinite(magnetic_y)) ||
+        (fabsf(magnetic_x) < 0.0001f && fabsf(magnetic_y) < 0.0001f)) {
+        return false;
+    }
+    *heading_deg = wrap_degrees(
+        atan2f(magnetic_y, magnetic_x) * 180.0f / (float)M_PI +
+        mounting_offset);
+    return true;
+}
+
 static esp_err_t send_status_json(httpd_req_t *request)
 {
     bno_state_t snapshot;

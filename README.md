@@ -1,32 +1,119 @@
 # Autonomous Garden Rover
 
-An open hardware and firmware project for a prototype garden rover: a mobile platform for carrying tools, moving a hose, and eventually navigating between garden beds on its own. The current version can be driven from a phone or handheld controller and has separate controllers for its drivetrain, stepper mechanisms, and hose valve.
+An open-source outdoor robot that can **mow grass and water a garden**. I built the rover around an aluminum-channel chassis, 10-inch recycled Power Wheels tires, custom 3D-printed transmissions, a height-adjustable string mower, and a two-axis hose turret. An ESP32-P4 coordinates the drivetrain, mower, steppers, IMU, audio, web controls, and the separate wireless hose-valve controller.
 
-The main controller is a Waveshare ESP32-P4. Its onboard ESP32-C6 provides Wi-Fi, while UART links connect the drivetrain and stepper controllers.
+This repository contains the firmware, wiring documentation, full Fusion 360 assemblies, neutral STEP exports, individual STEP parts, and 212 printable STL files used to build the prototype.
 
-## Demo video
+[**Watch the finished demo**](https://youtu.be/P-olpegfmmU) · [**Read the complete 128-hour Macondo build journal**](https://macondo.hackclub.com/projects/9276) · [**Browse the CAD**](CAD/)
 
-[![Autonomous Garden Rover demo: mowing grass and watering plants](https://i.ytimg.com/vi/P-olpegfmmU/hqdefault.jpg)](https://youtu.be/P-olpegfmmU?si=Mag2Q_cvqoKTUKmW)
+[![Autonomous Garden Rover mowing and watering demo](https://i.ytimg.com/vi/P-olpegfmmU/maxresdefault.jpg)](https://youtu.be/P-olpegfmmU)
 
-Click the thumbnail to watch the rover mow grass and water plants.
+## What it does
 
-## How it works
+- Drives over grass using four independently powered 10-inch wheels and 2.5:1 printed gear reductions.
+- Cuts grass with a C6374 sensored BLDC motor and replaceable string-line head.
+- Raises and lowers the mower using a NEMA 17, planetary reduction, dual rope spools, and four-point suspension.
+- Aims a hose using a two-axis turret with a self-locking worm-drive yaw stage and a geared pitch stage.
+- Opens and closes the garden hose with a weather-resistant ESP32/MG996 actuator mounted at the faucet.
+- Runs from a phone or custom handheld controller, with OTA firmware updates, microSD logging/audio, and voice input/output.
+- Demonstrates scripted autonomous mowing and watering routines using drivetrain encoder feedback and BNO080 magnetometer heading correction. General garden navigation and obstacle avoidance are future work.
+
+## System architecture
 
 ```text
-Phone or handheld controller
-        |
-        | Wi-Fi / HTTP
-        v
-Waveshare ESP32-P4 + ESP32-C6       microSD / speaker / microphone
-        |
-        +-- UART --> STM32F103 --> two BTS7960 drive channels
-        |
-        +-- UART --> GD32F303 Ender-3 board --> X/Y/Z stepper axes
-
-Handheld controller -- ESP-NOW --> ESP32 hose-valve controller
+Phone / handheld controller
+          |
+          | Wi-Fi / HTTP
+          v
+Waveshare ESP32-P4 + ESP32-C6 ---- microSD / microphone / speaker
+          |
+          +-- UART --> STM32F103 --> 2 x BTS7960 --> four drive motors
+          |
+          +-- UART --> GD32F303 Ender-3 board --> mower lift + turret X/Y
+          |
+          +-- UART --> ODESC --> C6374 mower motor
+          |
+          +-- UART --> BNO080 IMU
+          |
+          +-- local wireless command --> ESP32 hose controller --> MG996 valve actuator
 ```
 
-The ESP32-P4 runs the web interface and coordinates the rover. The STM32 handles the two drive channels, the repurposed Ender-3 controller runs three NEMA 17 axes, and a separate ESP32 controls the hose valve. The older Raspberry Pi controller is kept in [`legacy/`](legacy/README.md) for reference.
+| Subsystem | Hardware | Job |
+| --- | --- | --- |
+| Primary host | Waveshare ESP32-P4-WIFI6 | Web UI, command arbitration, autonomous sequences, OTA, audio, storage, and telemetry |
+| Drivetrain | STM32F103 + 2 × BTS7960 | Closed-loop left/right drive control using the motors' repurposed potentiometers as encoders |
+| Tool motion | Salvaged GD32F303 Ender-3 board | Generates step/direction motion for mower height, turret yaw, and turret pitch |
+| Mower | ODESC V4.2 + C6374 BLDC | Motor initialization, speed control, and telemetry over the ODrive ASCII protocol |
+| Heading | BNO080 | Magnetometer heading used by the scripted heading-hold loop |
+| Hose valve | ESP32-WROOM-32 + modified MG996 | Wireless valve actuation with potentiometer position feedback |
+
+The current ESP32-P4 firmware lives in [`firmware/esp32-p4/`](firmware/esp32-p4/README.md). The earlier Raspberry Pi 5 controller and commissioning tools remain in [`legacy/`](legacy/README.md) so the build history is reproducible.
+
+## Mechanical design
+
+### Drivetrain
+
+The chassis is cut from 3/4-inch aluminum U-channel so it is light, repairable, and able to flex slightly over uneven ground. Each DS3230 drivetrain motor uses its original potentiometer as an absolute encoder. The drive reduction began at 1.5:1, but outdoor tests showed that the rover needed more torque to turn in grass, so I redesigned it as a 16:40 tooth (2.5:1) PETG transmission with bearing-supported outputs.
+
+### Mower and height control
+
+The first cutting head used sacrificial razor-blade arms. Outdoor testing proved that the arms broke as intended, but too frequently, so the final head uses replaceable string line and a cover to keep grass out of the motor. A separate NEMA 17 gearbox winds two rope spools to lift the deck evenly from four points.
+
+### Watering turret
+
+The yaw axis is a large module-4 worm wheel riding on eight 608 bearings. The worm drive resists back-driving, and a later 4.36:1 planetary stage fixed slipping seen during outdoor tests. The pitch axis uses an 18:1 planetary transmission. At the faucet, a separate sealed ESP32 controller drives a continuous-rotation MG996 through 720 degrees and reports its encoder position.
+
+## Build journey
+
+The final rover came from repeated outdoor testing rather than one finished CAD pass. These are selected entries from the [full Macondo journal](https://macondo.hackclub.com/projects/9276).
+
+| Early rolling chassis | Mower CAD |
+| --- | --- |
+| ![First aluminum-channel rolling chassis with Power Wheels tires](https://cdn.hackclub.com/019ed8c7-f932-7aa7-a0f4-63fcd1a28b7b/image.png) | ![CAD of the original mower motor and blade assembly](https://cdn.hackclub.com/019f2ad2-f248-7ab3-a5b5-6bd28f143fd7/image.png) |
+| **Two-axis turret design** | **Weather-resistant hose valve controller** |
+| ![CAD of the turret worm wheel, bearings, and NEMA 17 drive](https://cdn.hackclub.com/019f7615-8497-7da8-bab4-61416e4c4f07/image.png) | ![Finished ESP32-controlled hose actuator installed at the faucet](https://cdn.hackclub.com/019fc962-4971-7d67-b8b5-c9f91bc0d1e1/image.png) |
+| **Electronics rebuild** | **Grass-covered rover after a mowing test** |
+| ![Rover power electronics and motor drivers during integration](https://cdn.hackclub.com/019f769f-fdfa-77c3-b291-9a491c0dfe77/image.png) | ![Inside of the rover after a successful outdoor mowing test](https://cdn.hackclub.com/019fe9d0-c1e4-7c82-b45c-76ef7a3f0b54/IMG_8295.jpeg) |
+
+Major iterations included:
+
+1. Building a wood proof of concept, then replacing it with a hand-cut aluminum chassis.
+2. Converting four DS3230 servos into geared drive motors with encoder feedback.
+3. Replacing the original razor blades with string line after destructive lawn tests.
+4. Reprinting the turret worm drive, strengthening its pitch shaft, and adding a modular yaw gearbox.
+5. Replacing unreliable motor drivers, rebuilding after a vibration-induced short circuit, and migrating the host from Raspberry Pi 5 to ESP32-P4.
+6. Designing a motorized actuator around the existing outdoor faucet instead of adding an unreliable inline valve.
+7. Adding UART subsystem links, OTA updates, voice recognition/feedback, and scripted heading-controlled demonstrations.
+
+### CAD timeline proof
+
+The repository includes the editable Fusion designs and exports; the Macondo journal also contains recordings of each Fusion 360 feature timeline. One example is shown below.
+
+![Fusion 360 design timeline playback](https://cdn.hackclub.com/019ffe4b-6828-72b7-a0dd-16e0c0f28e6b/Screen%20Recording%202026-08-13%20224616.gif)
+
+## CAD and fabrication files
+
+| Location | Contents |
+| --- | --- |
+| [`CAD/Assembly/`](CAD/Assembly/) | Full mower-body Fusion archive, complete STEP assembly, and individual STEP bodies |
+| [`CAD/Sub Assembly/`](CAD/Sub%20Assembly/) | 11 editable subsystem designs with matching STEP exports and individual parts |
+| [`CAD/Individual Printable STLs/`](CAD/Individual%20Printable%20STLs/) | 212 named STL exports, grouped into one flat folder per assembly or subassembly |
+
+The CAD tree currently contains 12 Fusion archives/designs, 650 STEP files, and 212 STL files. Generic `Body##` parts are retained in the individual STEP exports so the complete design hierarchy is preserved; printable STLs favor human-named parts and are grouped by their source assembly without deeper nesting.
+
+## Firmware and communication
+
+The P4 is the only high-level command source. Each real-time subsystem owns its low-level timing and stops locally if commands expire.
+
+- **STM32 drivetrain UART:** receives left/right drive commands and returns the four potentiometer-encoder readings. P0/P1 are the right wheels and P2/P3 are the left wheels.
+- **GD32 stepper UART:** accepts compact commands such as `MOTOR 1 B 4095` and `MSTOP 1` for the three NEMA 17 axes.
+- **ODESC UART:** uses the ODrive ASCII protocol for startup, mower velocity, current, voltage, and fault telemetry.
+- **BNO080 UART:** supplies the magnetometer heading used for heading-hold correction.
+- **Hose controller:** receives a local-network actuation command and closes the loop around the modified servo's potentiometer.
+
+The autonomous demonstration code combines these links into two routines: a ten-foot mowing pass held near 188°, and a watering sweep held near 22°. The watering routine opens the faucet, raises the turret pitch axis, sweeps the yaw axis, and advances the chassis in timed half-foot increments. The module is compiled into the P4 firmware but remains dormant until a future GUI action calls it.
+
+Protocol details and wiring notes are indexed in [`docs/`](docs/README.md).
 
 ## Bill of materials
 
@@ -185,13 +272,13 @@ The output is created under `build/`. A successful build is not proof that the f
 
 ## Current status
 
-The ESP32-P4 host, STM32 drive link, GD32 stepper link, web controls, microSD audio, and hose-control path have been tested on their intended hardware. Autonomous navigation, sensor fusion, and ODESC integration are still experimental.
+The physical rover has completed outdoor drive, mowing, watering, turret, and scripted autonomous-sequence demonstrations. The ESP32-P4 host, STM32 drive link, GD32 stepper link, ODESC mower link, BNO080 link, web controls, microSD audio, and hose-control path have all been exercised on the intended hardware. The current autonomous code demonstrates fixed routines; general navigation, obstacle avoidance, and sensor-fused localization are still experimental.
 
 This is prototype robotics hardware. Test it with the wheels raised, keep clear of moving mechanisms, verify every pin before applying power, and keep an independent power disconnect within reach.
 
-# Third-party notices
+## Third-party notices
 
-The repository-level [MIT License](LICENSE) applies to original project code
+The repository-level [MIT License](LICENSES/LICENSE) applies to original project code
 and documentation only. It does not replace licenses in bundled or derived
 third-party material.
 
@@ -208,4 +295,4 @@ vendored or derived code.
 
 ## License
 
-Original project code and documentation are released under the [MIT License](LICENSE). Some bundled firmware is derived from third-party projects and retains its own license; see [third-party notices](THIRD_PARTY_NOTICES.md) before redistributing or modifying it. The Marlin-derived stepper patches and binaries are GPL-3.0-only.
+Original project code and documentation are released under the [MIT License](LICENSES/LICENSE). Some bundled firmware is derived from third-party projects and retains its own license; review the third-party notices above before redistributing or modifying it. The Marlin-derived stepper patches and binaries are GPL-3.0-only.

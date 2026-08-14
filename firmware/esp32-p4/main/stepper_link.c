@@ -1035,6 +1035,92 @@ bool stepper_link_set_direct_rpm(float x_rpm, float y_rpm, float z_rpm,
     return accepted;
 }
 
+bool stepper_link_move_counted(int32_t x_steps, int32_t y_steps,
+                               int32_t z_steps, int x_rpm, int y_rpm,
+                               int z_rpm)
+{
+    if (!state_mutex || !tx_queue) return false;
+    const int32_t steps[3] = {x_steps, y_steps, z_steps};
+    const int rpm[3] = {x_rpm, y_rpm, z_rpm};
+    if ((!x_steps && !y_steps && !z_steps) ||
+        x_rpm < 1 || x_rpm > MAX_RPM || y_rpm < 1 || y_rpm > MAX_RPM ||
+        z_rpm < 1 || z_rpm > MAX_RPM) return false;
+
+    uint32_t id = 0;
+    bool accepted = false;
+    xSemaphoreTake(state_mutex, portMAX_DELAY);
+    if (state.round_trip && state.direct_capable && !state.direct_active &&
+        !state.count_active && !pending_count_locked()) {
+        bool allowed = true;
+        for (int i = 0; i < 3; ++i) {
+            int64_t target = state.axes[i].target + steps[i];
+            if (steps[i] && state.axes[i].limits_set &&
+                (!state.axes[i].known || target < state.axes[i].minimum ||
+                 target > state.axes[i].maximum)) allowed = false;
+        }
+        if (allowed) {
+            id = ++state.move_sequence;
+            state.count_id = id;
+            state.count_active = true;
+            memcpy(state.count_steps, steps, sizeof(steps));
+            for (int i = 0; i < 3; ++i) state.axes[i].target += steps[i];
+            state.last_error[0] = '\0';
+            accepted = true;
+        } else {
+            snprintf(state.last_error, sizeof(state.last_error),
+                     "Autonomous counted move outside configured limits");
+        }
+    } else {
+        snprintf(state.last_error, sizeof(state.last_error),
+                 "Stepper motion is already active or link is unavailable");
+    }
+    xSemaphoreGive(state_mutex);
+    if (!accepted) return false;
+
+    char payload[TX_PAYLOAD_CAPACITY];
+    int used = snprintf(payload, sizeof(payload),
+                        "M975\nM972 X%d Y%d Z%d\nM971 I%" PRIu32,
+                        rpm[0], rpm[1], rpm[2], id);
+    for (int i = 0; i < 3 && used > 0 && used < (int)sizeof(payload); ++i) {
+        if (steps[i]) {
+            used += snprintf(payload + used, sizeof(payload) - used,
+                             " %c%" PRId32, AXIS_NAMES[i], steps[i]);
+        }
+    }
+    if (used > 0 && used < (int)sizeof(payload) - 1) {
+        payload[used++] = '\n';
+        payload[used] = '\0';
+    }
+    if (used <= 0 || used >= (int)sizeof(payload) ||
+        !queue_payload(payload, false)) {
+        xSemaphoreTake(state_mutex, portMAX_DELAY);
+        state.count_active = false;
+        for (int i = 0; i < 3; ++i) state.axes[i].target -= steps[i];
+        snprintf(state.last_error, sizeof(state.last_error),
+                 "GD32 TX queue is full");
+        xSemaphoreGive(state_mutex);
+        return false;
+    }
+
+    xSemaphoreTake(state_mutex, portMAX_DELAY);
+    snprintf(state.last_command, sizeof(state.last_command),
+             "Count X%" PRId32 " Y%" PRId32 " Z%" PRId32,
+             steps[0], steps[1], steps[2]);
+    snprintf(state.last_action, sizeof(state.last_action),
+             "Queued autonomous counted move %" PRIu32, id);
+    xSemaphoreGive(state_mutex);
+    return true;
+}
+
+bool stepper_link_counted_active(void)
+{
+    if (!state_mutex) return false;
+    xSemaphoreTake(state_mutex, portMAX_DELAY);
+    bool active = state.count_active;
+    xSemaphoreGive(state_mutex);
+    return active;
+}
+
 static esp_err_t stop_handler(httpd_req_t *request)
 {
     stepper_link_quick_stop();

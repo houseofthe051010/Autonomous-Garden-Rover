@@ -16,3 +16,4 @@ esp_err_t bno080_link_start(bno080_motion_begin_fn begin_motion,
                             bno080_motion_end_fn end_motion);
 esp_err_t bno080_link_register_routes(httpd_handle_t server);
 void bno080_link_abort_calibration(void);
+bool bno080_link_get_magnetic_heading(float *heading_deg);

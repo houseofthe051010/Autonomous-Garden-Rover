@@ -21,6 +21,7 @@
 #include "mower_history.h"
 #include "bno080_link.h"
 #include "stepper_link.h"
+#include "drive_control.h"
 
 #define STM32_UART UART_NUM_1
 #define STM32_BAUD 115200
@@ -84,6 +85,8 @@ static int64_t tank_last_send_ms;
 static bool tank_mode_active;
 static bool motor_stop_pending;
 static bool imu_calibration_owns_drive;
+static bool autonomous_sequence_owns_drive;
+static bool autonomous_sequence_started_encoders;
 
 static int64_t now_ms(void)
 {
@@ -388,8 +391,9 @@ static void set_controller_targets(int left, int right, unsigned ramp_percent,
     static bool controller_stepper_active;
     xSemaphoreTake(state_mutex, portMAX_DELAY);
     bool imu_owns_drive = imu_calibration_owns_drive;
+    bool autonomous_owns_drive = autonomous_sequence_owns_drive;
     xSemaphoreGive(state_mutex);
-    if (imu_owns_drive) {
+    if (imu_owns_drive || autonomous_owns_drive) {
         if (immediate_stop) {
             bno080_link_abort_calibration();
             set_tank_target(0, 0, 300, true);
@@ -437,6 +441,75 @@ static void imu_motion_end(void)
     xSemaphoreTake(state_mutex, portMAX_DELAY);
     imu_calibration_owns_drive = false;
     xSemaphoreGive(state_mutex);
+}
+
+bool drive_control_autonomous_begin(void)
+{
+    rover_link_status_t controller = {0};
+    rover_link_get_status(&controller);
+    xSemaphoreTake(state_mutex, portMAX_DELAY);
+    bool allowed = state.alive && !controller.active &&
+                   !imu_calibration_owns_drive &&
+                   !autonomous_sequence_owns_drive;
+    bool encoders_running = state.encoder_rate_hz != 0;
+    if (allowed) autonomous_sequence_owns_drive = true;
+    xSemaphoreGive(state_mutex);
+    if (!allowed) return false;
+
+    set_tank_target(0, 0, 300, true);
+    if (!encoders_running &&
+        uart_command("ENCON 50", "OK ENCON", UART_REPLY_MS)) {
+        xSemaphoreTake(state_mutex, portMAX_DELAY);
+        state.encoder_rate_hz = 50;
+        autonomous_sequence_started_encoders = true;
+        xSemaphoreGive(state_mutex);
+    } else if (!encoders_running) {
+        xSemaphoreTake(state_mutex, portMAX_DELAY);
+        autonomous_sequence_owns_drive = false;
+        xSemaphoreGive(state_mutex);
+        return false;
+    }
+    return true;
+}
+
+bool drive_control_autonomous_set_percent(int left_percent, int right_percent)
+{
+    if (left_percent < -100 || left_percent > 100 ||
+        right_percent < -100 || right_percent > 100) return false;
+    xSemaphoreTake(state_mutex, portMAX_DELAY);
+    bool owns_drive = autonomous_sequence_owns_drive && state.alive;
+    xSemaphoreGive(state_mutex);
+    if (!owns_drive) return false;
+    set_tank_target(left_percent * 4095 / 100,
+                    right_percent * 4095 / 100, 200, false);
+    return true;
+}
+
+bool drive_control_autonomous_get_encoders(uint16_t adc[4], uint32_t *sequence)
+{
+    if (!adc) return false;
+    xSemaphoreTake(state_mutex, portMAX_DELAY);
+    bool valid = autonomous_sequence_owns_drive && state.alive &&
+                 state.encoder_rate_hz != 0;
+    for (int i = 0; i < 4; ++i) adc[i] = (uint16_t)state.encoders[i];
+    if (sequence) *sequence = state.encoder_sequence;
+    xSemaphoreGive(state_mutex);
+    return valid;
+}
+
+void drive_control_autonomous_end(void)
+{
+    set_tank_target(0, 0, 300, true);
+    xSemaphoreTake(state_mutex, portMAX_DELAY);
+    bool stop_encoders = autonomous_sequence_started_encoders;
+    autonomous_sequence_started_encoders = false;
+    autonomous_sequence_owns_drive = false;
+    xSemaphoreGive(state_mutex);
+    if (stop_encoders && uart_command("ENCOFF", "OK ENCOFF", UART_REPLY_MS)) {
+        xSemaphoreTake(state_mutex, portMAX_DELAY);
+        state.encoder_rate_hz = 0;
+        xSemaphoreGive(state_mutex);
+    }
 }
 
 static int ramp_value(int current, int target, int step)
@@ -792,9 +865,13 @@ static esp_err_t motor_handler(httpd_req_t *request)
 {
     xSemaphoreTake(state_mutex, portMAX_DELAY);
     bool imu_owns_drive = imu_calibration_owns_drive;
+    bool autonomous_owns_drive = autonomous_sequence_owns_drive;
     xSemaphoreGive(state_mutex);
     if (imu_owns_drive) {
         return send_conflict(request, "IMU forward calibration owns drivetrain");
+    }
+    if (autonomous_owns_drive) {
+        return send_conflict(request, "Autonomous sequence owns drivetrain");
     }
     int motor = query_int(request, "m", 0);
     int duty = query_int(request, "duty", 0);
@@ -824,9 +901,13 @@ static esp_err_t tank_handler(httpd_req_t *request)
 {
     xSemaphoreTake(state_mutex, portMAX_DELAY);
     bool imu_owns_drive = imu_calibration_owns_drive;
+    bool autonomous_owns_drive = autonomous_sequence_owns_drive;
     xSemaphoreGive(state_mutex);
     if (imu_owns_drive) {
         return send_conflict(request, "IMU forward calibration owns drivetrain");
+    }
+    if (autonomous_owns_drive) {
+        return send_conflict(request, "Autonomous sequence owns drivetrain");
     }
     int left = query_int(request, "left", 0);
     int right = query_int(request, "right", 0);
