@@ -1,0 +1,9 @@
+dependencies:
+  espressif/esp_wifi_remote:
+    version: ">=1.6,<2.0"
+  espressif/esp_hosted:
+    version: ">=2.12,<3.0"
+  espressif/esp_codec_dev:
+    version: "^1.6.2"
+  idf:
+    version: ">=6.0.0"

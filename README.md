@@ -49,7 +49,7 @@ Waveshare ESP32-P4 + ESP32-C6 ---- microSD / microphone / speaker
 | Heading | BNO080 | Magnetometer heading used by the scripted heading-hold loop |
 | Hose valve | ESP32-WROOM-32 + modified MG996 | Wireless valve actuation with potentiometer position feedback |
 
-The current ESP32-P4 firmware lives in [`firmware/esp32-p4/`](firmware/esp32-p4/README.md).
+The current ESP32-P4 firmware lives in [`firmware/esp32-p4/source/`](firmware/esp32-p4/source/).
 
 ### Block-level electrical schematic
 
@@ -170,7 +170,7 @@ This is the order used to turn the CAD into the physical prototype. Keep the com
 
 ### Safety first
 
-This rover contains a 10S lithium battery, a high-speed mower, high-current motor controllers, geared steppers, and a powered hose valve. Fit a fuse and accessible battery disconnect, remove the cutting line while commissioning, and test with the wheels raised. Never power a motor or the MG996 from a microcontroller rail. Verify converter outputs before connecting electronics, and read the target README before flashing a board.
+This rover contains a 10S lithium battery, a high-speed mower, high-current motor controllers, geared steppers, and a powered hose valve. Fit a fuse and accessible battery disconnect, remove the cutting line while commissioning, and test with the wheels raised. Never power a motor or the MG996 from a microcontroller rail. Verify converter outputs before connecting electronics, and review the wiring and target-specific flashing section below before powering a board.
 
 ### Build order
 
@@ -294,9 +294,9 @@ The current firmware convention uses Creality `X` for turret yaw, `Y` for turret
 
 #### ODESC mower and hose controller
 
-Connect the C6374's three phase wires to ODESC M0 and connect the ODESC to the protected battery bus. The demonstrated firmware uses the single physical axis (`axis0`) in sensorless mode; the repository also preserves the later Hall-wiring experiments. Follow the board-specific voltage-divider and firmware notes in [`firmware/odesc-v42/README.md`](firmware/odesc-v42/README.md).
+Connect the C6374's three phase wires to ODESC M0 and connect the ODESC to the protected battery bus. The demonstrated firmware uses the single physical axis (`axis0`) in sensorless mode. Build and flashing commands are provided below.
 
-At the faucet, connect hose-controller GPIO14 to the MG996 signal, GPIO35 to the potentiometer wiper, and join the ESP32, potentiometer, and servo-supply grounds. Keep GPIO35 below 3.3 V. Full wiring and packet behavior are in [`firmware/esp32-hose/README.md`](firmware/esp32-hose/README.md).
+At the faucet, connect hose-controller GPIO14 to the MG996 signal, GPIO35 to the potentiometer wiper, and join the ESP32, potentiometer, and servo-supply grounds. Keep GPIO35 below 3.3 V. Additional packet behavior is documented in the firmware source comments.
 
 ### Flash code to each subsystem
 
@@ -313,11 +313,11 @@ cd Autonomous-Garden-Rover
 
 | Target | Required toolchain | Build guide |
 | --- | --- | --- |
-| ESP32-P4 primary host | ESP-IDF 6.0 or newer | [`firmware/esp32-p4/README.md`](firmware/esp32-p4/README.md) |
-| STM32F103 drivetrain | PlatformIO with ST-Link support | [`firmware/stm32-drive/README.md`](firmware/stm32-drive/README.md) |
-| GD32 Ender-3 stepper board | Marlin 2.1.2.5 and PlatformIO | [`firmware/gd32-stepper/README.md`](firmware/gd32-stepper/README.md) |
-| ESP32 hose controller | PlatformIO | [`firmware/esp32-hose/README.md`](firmware/esp32-hose/README.md) |
-| ODESC V4.2 (experimental) | Ubuntu, Tup, and `gcc-arm-none-eabi` | [`firmware/odesc-v42/README.md`](firmware/odesc-v42/README.md) |
+| ESP32-P4 primary host | ESP-IDF 6.0 or newer | [`firmware/esp32-p4/source/`](firmware/esp32-p4/source/) |
+| STM32F103 drivetrain | PlatformIO with ST-Link support | [`firmware/stm32-drive/source/`](firmware/stm32-drive/source/) |
+| GD32 Ender-3 stepper board | Marlin 2.1.2.5 and PlatformIO | [`firmware/gd32-stepper/source/`](firmware/gd32-stepper/source/) |
+| ESP32 hose controller | PlatformIO | [`firmware/esp32-hose/source/`](firmware/esp32-hose/source/) |
+| ODESC V4.2 (experimental) | Ubuntu, Tup, and `gcc-arm-none-eabi` | [`firmware/odesc-v42/source/`](firmware/odesc-v42/source/) |
 
 Install ESP-IDF using Espressif's official setup instructions, then open an ESP-IDF-enabled terminal before running `idf.py`. Install PlatformIO through its CLI or IDE integration and ensure the `pio` command is available in your shell.
 
@@ -326,7 +326,7 @@ Install ESP-IDF using Espressif's official setup instructions, then open an ESP-
 The ESP32-P4 needs a controller key that is unique to your own rover and handheld controller. Create the ignored local file from the example:
 
 ```sh
-cd firmware/esp32-p4/main
+cd firmware/esp32-p4/source/main
 cp rover_control_key.example.h rover_control_key.h
 ```
 
@@ -337,7 +337,7 @@ Replace all 32 `0x00` values with 32 cryptographically random bytes and place th
 ##### ESP32-P4 primary host
 
 ```sh
-cd firmware/esp32-p4
+cd firmware/esp32-p4/source
 idf.py set-target esp32p4
 idf.py build
 ```
@@ -348,12 +348,12 @@ To flash a connected board, replace the serial port with the one assigned by you
 idf.py -p /dev/ttyACM0 flash monitor
 ```
 
-The P4 uses Component Manager to fetch its declared dependencies during the build. See its README for required wiring, partition layout, OTA behavior, and network-security notes.
+The P4 uses Component Manager to fetch its declared dependencies during the build. Its partition table and dependency lock are included in the same `source` directory; use the wiring table above when connecting the subsystem UARTs.
 
 ##### STM32F103 drivetrain controller
 
 ```sh
-cd firmware/stm32-drive
+cd firmware/stm32-drive/source
 pio run
 ```
 
@@ -378,12 +378,12 @@ cp /path/to/Autonomous-Garden-Rover/firmware/gd32-stepper/source/_Statusscreen.h
 platformio run -e STM32F103RE_creality
 ```
 
-Flash the resulting image from a FAT32 microSD card only after reviewing the [GD32 guide](firmware/gd32-stepper/README.md). This derived target is licensed under GPL-3.0-only, unlike the repository's original MIT-licensed material.
+Flash the resulting image from a FAT32 microSD card. This derived target is licensed under GPL-3.0-only, unlike the repository's original MIT-licensed material.
 
 ##### ESP32 hose controller
 
 ```sh
-cd firmware/esp32-hose
+cd firmware/esp32-hose/source
 pio run
 ```
 
@@ -393,11 +393,11 @@ To upload, use your board's port:
 pio run -t upload --upload-port /dev/ttyUSB0
 ```
 
-Read the hose-controller README before wiring the actuator; it requires a separate 5-6 V supply sized for servo stall current and a common ground.
+The hose actuator requires a separate 5-6 V supply sized for servo stall current and a common ground with its ESP32 controller.
 
 ##### ODESC V4.2
 
-The deployed, motor-tested image and rollback artifacts are under [`firmware/odesc-v42/releases/external-vbus-gpio3-stable-20260811/`](firmware/odesc-v42/releases/external-vbus-gpio3-stable-20260811/). Read that release and the target README before choosing an image. Build or flash this target only on an isolated bench with the mower phases disconnected for the first boot.
+The deployed, motor-tested BIN, HEX, and ELF files are under [`firmware/odesc-v42/images/`](firmware/odesc-v42/images/). Build or flash this target only on an isolated bench with the mower phases disconnected for the first boot.
 
 ```sh
 cd firmware/odesc-v42/source/Firmware
@@ -433,10 +433,10 @@ The output is created under `build/`. A successful build is not proof that the f
 
 | Folder | Contents |
 | --- | --- |
-| [`firmware/esp32-p4/`](firmware/esp32-p4/README.md) | Main rover controller, web UI, Wi-Fi, audio, storage, and UART links |
-| [`firmware/stm32-drive/`](firmware/stm32-drive/README.md) | Dual-BTS7960 drivetrain controller |
-| [`firmware/gd32-stepper/`](firmware/gd32-stepper/README.md) | Three-axis stepper firmware for the Ender-3 controller |
-| [`firmware/esp32-hose/`](firmware/esp32-hose/README.md) | Hose-valve controller |
+| [`firmware/esp32-p4/source/`](firmware/esp32-p4/source/) | Main rover controller, web UI, Wi-Fi, audio, storage, and UART links |
+| [`firmware/stm32-drive/source/`](firmware/stm32-drive/source/) | Dual-BTS7960 drivetrain controller |
+| [`firmware/gd32-stepper/source/`](firmware/gd32-stepper/source/) | Three-axis stepper firmware for the Ender-3 controller |
+| [`firmware/esp32-hose/source/`](firmware/esp32-hose/source/) | Hose-valve controller |
 
 ## Current status
 
@@ -449,23 +449,3 @@ This is prototype robotics hardware. Test it with the wheels raised, keep clear 
 I would use stronger drivetrain motors so the rover has more turning torque and margin on thick or uneven grass. For watering, I would replace the continuously attached garden hose with an onboard tank: the rover could return to a stationary filling point, store water, leave to water the garden, and then come back to refill. That would remove hose drag and make the watering route much less constrained.
 
 With a larger budget, I would also build a custom production PCB that combines the host, power conversion, drivetrain, stepper, sensor, and mower-control electronics. The current modular design uses separate microcontrollers and UART-connected subsystems because it is less expensive and easier to repair, but a validated combined board would reduce wiring and make the final electronics package more compact.
-
-## Third-party notices
-
-The repository-level [MIT License](LICENSE) applies to original project code
-and documentation only. It does not replace licenses in bundled or derived
-third-party material.
-
-| Material | Location | License / notice |
-| --- | --- | --- |
-| ODrive-derived ODESC source | [`firmware/odesc-v42/source/`](firmware/odesc-v42/source/) | MIT; retain the included [ODrive notice](firmware/odesc-v42/source/LICENSE.md) |
-| Marlin-derived GD32 stepper patch, display assets, and binary | [`firmware/gd32-stepper/`](firmware/gd32-stepper/) | GPL-3.0-only; full text in [`Marlin-GPL-3.0.txt`](Marlin-GPL-3.0.txt) |
-
-Before copying, modifying, or redistributing third-party material, review the
-license located with that material. Add a notice here when introducing new
-vendored or derived code.
-
-
-## License
-
-Original project code and documentation are released under the [MIT License](LICENSE). Some bundled firmware is derived from third-party projects and retains its own license; review the third-party notices above before redistributing or modifying it. The Marlin-derived stepper patches and binaries are GPL-3.0-only.
