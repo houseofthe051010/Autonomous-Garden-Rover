@@ -135,8 +135,6 @@ The P4 is the only high-level command source. Each real-time subsystem owns its 
 
 The autonomous demonstration code combines these links into two routines: a ten-foot mowing pass held near 188°, and a watering sweep held near 22°. The watering routine opens the faucet, raises the turret pitch axis, sweeps the yaw axis, and advances the chassis in timed half-foot increments. The module is compiled into the P4 firmware but remains dormant until a future GUI action calls it.
 
-Protocol details and wiring notes are indexed in [`docs/`](docs/README.md).
-
 ## Bill of materials
 
 | Item | Qty. | Unit price | Shipping | Total | Link |
@@ -274,7 +272,7 @@ Join controller signal grounds intentionally. Do not use the aluminum chassis as
 | Mower ODESC | GPIO27 TX, GPIO47 RX | ODESC GPIO2 RX, GPIO1 TX | 115200 8N1 |
 | BNO080 | GPIO5 TX, GPIO6 RX | BNO080 RX, TX | 3,000,000 8N1 |
 
-TX always goes to RX, every link uses 3.3 V signaling, and every pair needs a shared ground. Set the BNO080 interface straps for UART-SHTP before power-up. On the Creality board, isolate the CH340 TX output before attaching the P4 TX line and do not connect a USB host to the CH340 while the direct UART tap is in use. The detailed pin notes are in [`docs/hardware/`](docs/hardware/README.md).
+TX always goes to RX, every link uses 3.3 V signaling, and every pair needs a shared ground. Set the BNO080 interface straps for UART-SHTP before power-up. On the Creality board, isolate the CH340 TX output before attaching the P4 TX line and do not connect a USB host to the CH340 while the direct UART tap is in use.
 
 #### STM32, BTS7960, and wheel encoders
 
@@ -365,7 +363,7 @@ With an ST-Link connected and the board safely isolated from motor power:
 pio run --target upload
 ```
 
-Check the [STM32 UART protocol](docs/protocols/stm32-drive-uart.md) before connecting it to the host controller.
+The STM32 firmware source contains the remaining UART command details as inline comments.
 
 ##### GD32 Ender-3 stepper controller
 
@@ -439,7 +437,6 @@ The output is created under `build/`. A successful build is not proof that the f
 | [`firmware/stm32-drive/`](firmware/stm32-drive/README.md) | Dual-BTS7960 drivetrain controller |
 | [`firmware/gd32-stepper/`](firmware/gd32-stepper/README.md) | Three-axis stepper firmware for the Ender-3 controller |
 | [`firmware/esp32-hose/`](firmware/esp32-hose/README.md) | Hose-valve controller |
-| [`docs/`](docs/README.md) | Wiring, architecture, protocols, and safety notes |
 
 ## Current status
 
@@ -455,14 +452,14 @@ With a larger budget, I would also build a custom production PCB that combines t
 
 ## Third-party notices
 
-The repository-level [MIT License](LICENSES/LICENSE) applies to original project code
+The repository-level [MIT License](LICENSE) applies to original project code
 and documentation only. It does not replace licenses in bundled or derived
 third-party material.
 
 | Material | Location | License / notice |
 | --- | --- | --- |
 | ODrive-derived ODESC source | [`firmware/odesc-v42/source/`](firmware/odesc-v42/source/) | MIT; retain the included [ODrive notice](firmware/odesc-v42/source/LICENSE.md) |
-| Marlin-derived GD32 stepper patch, display assets, and binary | [`firmware/gd32-stepper/`](firmware/gd32-stepper/) | GPL-3.0-only; full text in [`LICENSES/Marlin-GPL-3.0.txt`](LICENSES/Marlin-GPL-3.0.txt) |
+| Marlin-derived GD32 stepper patch, display assets, and binary | [`firmware/gd32-stepper/`](firmware/gd32-stepper/) | GPL-3.0-only; full text in [`Marlin-GPL-3.0.txt`](Marlin-GPL-3.0.txt) |
 
 Before copying, modifying, or redistributing third-party material, review the
 license located with that material. Add a notice here when introducing new
@@ -471,4 +468,4 @@ vendored or derived code.
 
 ## License
 
-Original project code and documentation are released under the [MIT License](LICENSES/LICENSE). Some bundled firmware is derived from third-party projects and retains its own license; review the third-party notices above before redistributing or modifying it. The Marlin-derived stepper patches and binaries are GPL-3.0-only.
+Original project code and documentation are released under the [MIT License](LICENSE). Some bundled firmware is derived from third-party projects and retains its own license; review the third-party notices above before redistributing or modifying it. The Marlin-derived stepper patches and binaries are GPL-3.0-only.

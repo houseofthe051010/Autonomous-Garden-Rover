@@ -49,7 +49,7 @@ The firmware intentionally disables heater sensing/protection because no heater
 hardware is attached. Never use this build to operate a hotend or heated bed.
 
 This firmware patch is derived from Marlin and remains subject to the
-[GNU General Public License v3](../../LICENSES/Marlin-GPL-3.0.txt). The root MIT
+[GNU General Public License v3](../../Marlin-GPL-3.0.txt). The root MIT
 license does not replace Marlin's license for these derived files.
 
 ## Initial hardware test

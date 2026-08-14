@@ -36,9 +36,8 @@ to STM32 direction of the UART connection.
 ## Encoder controls
 
 Streaming is off at boot. `ENCREAD` requests one PA0-PA3 sample set. `ENCON 50`
-starts the recommended 50 Hz stream and `ENCOFF` stops it. See the
-[STM32 UART protocol](../../docs/protocols/stm32-drive-uart.md) for the complete
-protocol.
+starts the recommended 50 Hz stream and `ENCOFF` stops it. Remaining command
+details are documented inline in the firmware source.
 
 Command parsing and the 1.5-second motor watchdog run before periodic
 telemetry. UART receive work is bounded per main-loop pass, and encoder reports
