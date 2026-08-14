@@ -2,7 +2,7 @@
 
 An open-source outdoor robot that can **mow grass and water a garden**. I built the rover around an aluminum-channel chassis, 10-inch recycled Power Wheels tires, custom 3D-printed transmissions, a height-adjustable string mower, and a two-axis hose turret. An ESP32-P4 coordinates the drivetrain, mower, steppers, IMU, audio, web controls, and the separate wireless hose-valve controller.
 
-This repository contains the firmware, wiring documentation, full Fusion 360 assemblies, neutral STEP exports, individual STEP parts, and 212 printable STL files used to build the prototype.
+This repository contains the firmware, wiring documentation, full Fusion 360 assemblies, neutral STEP exports, individual STEP parts, and 72 deduplicated printable STL files used to build the prototype.
 
 [**Watch the finished demo**](https://youtu.be/P-olpegfmmU) · [**Read the complete 128-hour Macondo build journal**](https://macondo.hackclub.com/projects/9276) · [**Browse the CAD**](CAD/)
 
@@ -48,6 +48,22 @@ Waveshare ESP32-P4 + ESP32-C6 ---- microSD / microphone / speaker
 | Hose valve | ESP32-WROOM-32 + modified MG996 | Wireless valve actuation with potentiometer position feedback |
 
 The current ESP32-P4 firmware lives in [`firmware/esp32-p4/`](firmware/esp32-p4/README.md). The earlier Raspberry Pi 5 controller and commissioning tools remain in [`legacy/`](legacy/README.md) so the build history is reproducible.
+
+### Block-level electrical schematic
+
+The block-level schematic shows the power rails, host computer, motor-control boards, sensors, and UART links used by the modular rover electronics.
+
+[![Autonomous Garden Rover block-level electrical schematic](Schematics/Block-level%20schematic/rover.svg)](Schematics/Block-level%20schematic/rover.svg)
+
+The editable KiCad source is in [`Schematics/Block-level schematic/`](Schematics/Block-level%20schematic/).
+
+### Combined single-host mainboard prototype
+
+The normal rover architecture uses separate drivetrain, stepper, BLDC, and host-controller boards connected to the ESP32-P4 through UART. This keeps the individual boards inexpensive, makes damaged subsystems easier to replace, and allows the rover to reuse readily available controller hardware.
+
+An optional [`combined single-host mainboard prototype`](Schematics/Prototype%20single%20board%20host%20computer/) places the ESP32-P4/C6 host, four stepper drivers, two brushed-motor bridges, a dedicated STM32/DRV8301 BLDC stage, power conversion, IMU connection, USB, and expansion GPIO on one PCB. It reduces the number of separate boards and UART wiring harnesses when a compact single-board installation is preferred.
+
+The combined board is substantially more expensive than building the individual subsystem boards and joining them with UART. Its large four-layer PCB, double-sided SMD population, high component count, and specialized motor-control parts increase fabrication and assembly costs. The checked-in KiCad and Gerber files are a prototype/quotation design; the modular UART architecture remains the lower-cost and more repairable configuration used by the rover.
 
 ## Mechanical design
 
@@ -96,10 +112,10 @@ The repository includes the editable Fusion designs and exports; the Macondo jou
 | Location | Contents |
 | --- | --- |
 | [`CAD/Assembly/`](CAD/Assembly/) | Full mower-body Fusion archive, complete STEP assembly, and individual STEP bodies |
-| [`CAD/Sub Assembly/`](CAD/Sub%20Assembly/) | 11 editable subsystem designs with matching STEP exports and individual parts |
-| [`CAD/Individual Printable STLs/`](CAD/Individual%20Printable%20STLs/) | 212 named STL exports, grouped into one flat folder per assembly or subassembly |
+| [`CAD/Sub-assemblies/`](CAD/Sub-assemblies/) | 11 editable subsystem designs with matching STEP exports and individual parts |
+| [`CAD/Individual Printable STLs/`](CAD/Individual%20Printable%20STLs/) | 72 named, deduplicated STL exports grouped by mechanical assembly and function |
 
-The CAD tree currently contains 12 Fusion archives/designs, 650 STEP files, and 212 STL files. Generic `Body##` parts are retained in the individual STEP exports so the complete design hierarchy is preserved; printable STLs favor human-named parts and are grouped by their source assembly without deeper nesting.
+The CAD tree currently contains 12 Fusion archives/designs, 650 STEP files, and 72 STL files. Generic `Body##` parts are retained in the individual STEP exports so the complete design hierarchy is preserved; printable STLs favor human-named parts, exclude purchased metal hardware, and are deduplicated and grouped by assembly and function.
 
 ## Firmware and communication
 
@@ -140,20 +156,150 @@ Protocol details and wiring notes are indexed in [`docs/`](docs/README.md).
 | **Estimated total** |  |  |  | **$396.21** | |
 ## Build it yourself
 
-This guide gets a fresh checkout to buildable firmware. It does **not** make a complete rover: assembling and validating the electrical system is a separate, hardware-specific task. Read the target README and the relevant documents under [`docs/`](docs/README.md) before connecting power or flashing a board.
+This is the order used to turn the CAD into the physical prototype. Keep the complete [`mower body.step`](CAD/Assembly/mower%20body.step) open as the placement reference and use the files under [`CAD/Individual Printable STLs/`](CAD/Individual%20Printable%20STLs/) as the print queue. The individual STEP exports are useful for measurements and modifications; only the STL tree is intended as the printable-parts list.
 
 ### Safety first
 
-This project controls motors and a hose-valve actuator. Build and test one controller at a time with drive wheels raised or mechanisms disconnected, use low command values, and keep an independent power disconnect within reach. Never power the MG996 hose servo from an ESP32 board. Do not flash the experimental ODESC images on a live rover without following its supervised bench-validation procedure.
+This rover contains a 10S lithium battery, a high-speed mower, high-current motor controllers, geared steppers, and a powered hose valve. Fit a fuse and accessible battery disconnect, remove the cutting line while commissioning, and test with the wheels raised. Never power a motor or the MG996 from a microcontroller rail. Verify converter outputs before connecting electronics, and read the target README before flashing a board.
 
-### 1. Get the source
+### Build order
+
+#### 1. Print and sort the mechanical parts
+
+Print the parts by folder so hardware does not get mixed between mechanisms:
+
+| Folder | Parts used for |
+| --- | --- |
+| [`structural/`](CAD/Individual%20Printable%20STLs/structural/) | Aluminum-channel joints and the battery/frame hardware |
+| [`front and rear wheels/`](CAD/Individual%20Printable%20STLs/front%20and%20rear%20wheels/) | Motor housings, 2.5:1 gears, wheel adapters, and output supports |
+| [`motor blade attachment/`](CAD/Individual%20Printable%20STLs/motor%20blade%20attachment/) | C6374 casing, motor mount, shaft adapter, and string head |
+| [`mower height control system/`](CAD/Individual%20Printable%20STLs/mower%20height%20control%20system/) | NEMA 17 planetary, rope spools, rollers, and shaft supports |
+| [`hose turret/`](CAD/Individual%20Printable%20STLs/hose%20turret/) | Yaw worm drive, pitch gearbox, bearing supports, and hose adapter |
+| [`electronics holders/`](CAD/Individual%20Printable%20STLs/electronics%20holders/) | Main host, ODESC, and stepper-controller enclosures |
+| [`hose_control/`](CAD/Individual%20Printable%20STLs/hose_control/) | Separate faucet actuator enclosure and linkage |
+
+PETG was used for the final outdoor drivetrain gears. The heavily loaded turret, mower, and gearbox parts were printed with extra walls; the small channel joints used high infill. Drill and clean printed holes only after checking them against the M3 hardware and bearings.
+
+#### 2. Build the aluminum frame first
+
+1. Cut the 3/4-inch aluminum U-channel into the longitudinal rails and crossmembers shown in the complete STEP assembly. Lay every piece flat in its CAD position before drilling.
+2. Orient the open sides of the channels inward where possible; the prototype uses the channels as protected wire routes.
+3. Join the channels with the printed aluminum-channel mounts and M3 hardware. The hand-built prototype used slightly oversized holes with large washers, allowing the frame to be squared before final tightening.
+4. Install the center battery cage and spacers. Keep the heavy 10S pack near the center of the wheelbase, leaving the front bay for the mower and the rear bay for the turret.
+5. Add the wire-management cover and leave the enclosure lids off until every subsystem has passed its individual test.
+
+| Frame layout in CAD | First aluminum rolling chassis |
+| --- | --- |
+| ![CAD of the aluminum-channel chassis](https://cdn.hackclub.com/019ecd9e-3048-763e-8904-38117268f75b/image.png) | ![Physical aluminum-channel rolling chassis](https://cdn.hackclub.com/019ed8c7-f932-7aa7-a0f4-63fcd1a28b7b/image.png) |
+
+#### 3. Add the drivetrain modules
+
+1. Convert the four DS3230 units into continuous drive motors while retaining each internal potentiometer as an encoder. Bring the motor pair and three potentiometer wires out through strain relief.
+2. Assemble one geared corner at a time. The 16-tooth motor gear drives the 40-tooth PETG output gear for a 2.5:1 reduction.
+3. Support the wheel shaft at both ends with the printed bearing support. The support removes the rover's radial load from the motor shaft.
+4. Fit the correct front or rear wheel adapter, install the 10-inch wheel, and check that the gear mesh turns freely before mounting the next corner.
+5. Mount two motors on each side. The firmware treats both right motors as one track and both left motors as the other track.
+
+#### 4. Install the mower and lift
+
+1. Bolt the C6374 BLDC into its printed casing and mount the casing in the front center opening of the frame.
+2. Fit the shaft attachment and the final string-line head. The early sacrificial razor-blade arms are documented in the journal, but the demonstrated rover uses replaceable mower string because the printed blade arms broke too frequently outdoors.
+3. Assemble the mower-height NEMA 17 planetary stage, output gear, two rope spools, 8 mm shafts, and their supports. Lock the gears to the shafts with the modeled M3 cross-fasteners rather than relying on glue alone.
+4. Route four equal rope runs through the printed low-friction guides: two lift points at the front and two at the rear of the mower carriage. Wind the opposing spool directions so one side pays out as the other takes up.
+5. Move the lift through a small range by hand, square the mower deck, then tension and lock the ropes. Do not install cutting line until height motion and emergency stop behavior are verified.
+
+| Mower mounted in the frame | Rope/planetary height mechanism |
+| --- | --- |
+| ![Mounted mower motor and printed frame](https://cdn.hackclub.com/019f2d6b-d0ab-7b6d-bc03-4b0c55bb6498/IMG_7187.jpeg) | ![Assembled mower height gearbox and rope outputs](https://cdn.hackclub.com/019f7668-f18e-7c52-b7cd-cbff927192d5/image.png) |
+
+#### 5. Assemble the two-axis hose turret
+
+1. Install the large module-4 yaw worm wheel at the rear of the frame. The rotating base rides on eight purchased 608 bearings held by the printed bearing mounts.
+2. Assemble the NEMA 17 yaw drive, worm, shaft supports, and the later 4.36:1 planetary input stage. Set the mesh so the wheel turns without binding but cannot jump teeth.
+3. Bolt the two pitch uprights to the rotating base. Assemble the pitch NEMA 17 and its 18:1 planetary gearbox, using the strengthened output shaft from the final CAD revision.
+4. Fit the hose rod and printed hose adapter, then retain the hose with zip ties. Turn the pitch motor so its cable exits downward and leave enough cable loop for the complete yaw range.
+5. Jog yaw and pitch separately before connecting the hose. Confirm neither axis pulls its wiring into the worm wheel.
+
+| Turret gearbox CAD | Turret base and pitch structure |
+| --- | --- |
+| ![CAD of the turret worm and bearing system](https://cdn.hackclub.com/019f7615-8497-7da8-bab4-61416e4c4f07/image.png) | ![Physical turret structure during assembly](https://cdn.hackclub.com/019f763e-3c00-7ab3-b682-3cfc93d84f86/image.png) |
+
+#### 6. Mount the electronics and faucet controller
+
+Mount the ODESC and GD32/Ender controller in their individual printed holders on the side of the chassis. Put the ESP32-P4, STM32 drive controller, BTS7960 modules, and power converters in the main electronics enclosure. Route high-current motor wiring separately from UART and encoder wires, twist signal pairs where practical, add strain relief, and seal cable openings only after testing.
+
+The hose valve is a separate subsystem mounted at the faucet. Assemble the continuous-rotation MG996, potentiometer feedback, ESP32, output shaft, faucet adapter, and lid from [`hose_control/`](CAD/Individual%20Printable%20STLs/hose_control/). It communicates wirelessly with the rover; no long servo cable runs between the faucet and chassis.
+
+| Electronics during integration | Finished faucet actuator |
+| --- | --- |
+| ![Rover electronics during subsystem integration](https://cdn.hackclub.com/019f769f-fdfa-77c3-b291-9a491c0dfe77/image.png) | ![Weather-resistant ESP32 hose actuator](https://cdn.hackclub.com/019fc962-4971-7d67-b8b5-c9f91bc0d1e1/image.png) |
+
+The photos and design decisions above come from the [complete Macondo build journal](https://macondo.hackclub.com/projects/9276), including the failed 1.5:1 drivetrain, blade tests, gearbox rebuilds, short-circuit repair, and migration from Raspberry Pi 5 to ESP32-P4.
+
+### Wire the rover
+
+#### Power distribution
+
+The prototype uses a 10S battery: approximately 36 V nominal and 42 V fully charged. Split the protected battery output into parallel branches; do not cascade the high-current drivetrain and stepper loads through one another.
+
+| Rail | Connects to |
+| --- | --- |
+| Protected battery bus | ODESC motor-power input and the inputs of the DC converters |
+| 24 V buck output | Creality/GD32 board and its NEMA 17 drivers |
+| 8 V high-current buck output | Both BTS7960 motor-power inputs and the drivetrain motors |
+| Stable 5 V regulator | ESP32-P4 host input and low-voltage support electronics |
+| 3.3 V logic | BNO080 logic and potentiometer endpoints where required |
+| Separate 5-6 V supply at faucet | MG996 servo; its ground joins the hose ESP32 ground |
+
+Join controller signal grounds intentionally. Do not use the aluminum chassis as a normal current-return conductor. Measure each converter with the load disconnected before plugging in a controller.
+
+#### Host UART and sensor harness
+
+| Link | ESP32-P4 | Subsystem | Rate |
+| --- | --- | --- | ---: |
+| Drivetrain | GPIO21 TX, GPIO22 RX | STM32 PA10 RX, PA9 TX | 115200 8N1 |
+| Stepper controller | GPIO2 TX, GPIO1 RX | GD32 PA10 RX, PA9 TX | 115200 8N1 |
+| Mower ODESC | GPIO27 TX, GPIO47 RX | ODESC GPIO2 RX, GPIO1 TX | 115200 8N1 |
+| BNO080 | GPIO5 TX, GPIO6 RX | BNO080 RX, TX | 3,000,000 8N1 |
+
+TX always goes to RX, every link uses 3.3 V signaling, and every pair needs a shared ground. Set the BNO080 interface straps for UART-SHTP before power-up. On the Creality board, isolate the CH340 TX output before attaching the P4 TX line and do not connect a USB host to the CH340 while the direct UART tap is in use. The detailed pin notes are in [`docs/hardware/`](docs/hardware/README.md).
+
+#### STM32, BTS7960, and wheel encoders
+
+| Function | Right track / BTS M1 | Left track / BTS M2 |
+| --- | --- | --- |
+| RPWM | STM32 PA8 | STM32 PB10 |
+| LPWM | STM32 PA11 | STM32 PB11 |
+| R_IS feedback | STM32 PA4 | STM32 PA6 |
+| L_IS feedback | STM32 PA5 | STM32 PA7 |
+| Wheel-pot ADCs | PA0 and PA1 | PA2 and PA3 |
+
+Tie each BTS7960 module's `R_EN` and `L_EN` to its enabled logic level, connect module logic ground to STM32 ground, and connect the two module motor terminals to the two motors on that side. The installed rover uses BTS direction `B` as forward. If a side runs backward, correct the motor-output polarity consistently rather than changing only one wheel.
+
+Power each encoder potentiometer from 3.3 V and ground, with its wiper going to the listed ADC input. The potentiometers expose about 220 degrees of each motor rotation; the firmware detects wraparound and combines the 2.5:1 motor-to-wheel reduction for travel estimation.
+
+#### Stepper sockets and mechanisms
+
+The current firmware convention uses Creality `X` for turret yaw, `Y` for turret pitch/deploy, and `Z` for mower height. Plug each four-wire NEMA 17 into the matching socket after identifying its two coil pairs with a meter; motor-wire colors are not standardized. The Ender board's four stepper drivers share one hardware enable, so test with only one mechanism connected at first. The X/Y/Z endstop sockets are available as debounced switch inputs but the direct-motion firmware does not automatically stop on them.
+
+#### ODESC mower and hose controller
+
+Connect the C6374's three phase wires to ODESC M0 and connect the ODESC to the protected battery bus. The demonstrated firmware uses the single physical axis (`axis0`) in sensorless mode; the repository also preserves the later Hall-wiring experiments. Follow the board-specific voltage-divider and firmware notes in [`firmware/odesc-v42/README.md`](firmware/odesc-v42/README.md).
+
+At the faucet, connect hose-controller GPIO14 to the MG996 signal, GPIO35 to the potentiometer wiper, and join the ESP32, potentiometer, and servo-supply grounds. Keep GPIO35 below 3.3 V. Full wiring and packet behavior are in [`firmware/esp32-hose/README.md`](firmware/esp32-hose/README.md).
+
+### Flash code to each subsystem
+
+Flash and test one controller at a time before joining the UART harness. The recommended order is GD32 steppers, STM32 drivetrain, hose ESP32, ODESC, and finally the ESP32-P4 host.
+
+#### 1. Get the source
 
 ```sh
 git clone https://github.com/houseofthe051010/Autonomous-Garden-Rover.git
 cd Autonomous-Garden-Rover
 ```
 
-### 2. Install the toolchain for the target you are building
+#### 2. Install the toolchain for the target you are building
 
 | Target | Required toolchain | Build guide |
 | --- | --- | --- |
@@ -165,7 +311,7 @@ cd Autonomous-Garden-Rover
 
 Install ESP-IDF using Espressif's official setup instructions, then open an ESP-IDF-enabled terminal before running `idf.py`. Install PlatformIO through its CLI or IDE integration and ensure the `pio` command is available in your shell.
 
-### 3. Configure secrets locally
+#### 3. Configure secrets locally
 
 The ESP32-P4 needs a controller key that is unique to your own rover and handheld controller. Create the ignored local file from the example:
 
@@ -176,9 +322,9 @@ cp rover_control_key.example.h rover_control_key.h
 
 Replace all 32 `0x00` values with 32 cryptographically random bytes and place the identical key in the matching handheld-controller project. Do not commit this file, Wi-Fi credentials, device backups, or serial captures containing credentials. The repository ignores `rover_control_key.h` by design.
 
-### 4. Build each target
+#### 4. Build and flash each target
 
-#### ESP32-P4 primary host
+##### ESP32-P4 primary host
 
 ```sh
 cd firmware/esp32-p4
@@ -194,7 +340,7 @@ idf.py -p /dev/ttyACM0 flash monitor
 
 The P4 uses Component Manager to fetch its declared dependencies during the build. See its README for required wiring, partition layout, OTA behavior, and network-security notes.
 
-#### STM32F103 drivetrain controller
+##### STM32F103 drivetrain controller
 
 ```sh
 cd firmware/stm32-drive
@@ -209,7 +355,7 @@ pio run --target upload
 
 Check the [STM32 UART protocol](docs/protocols/stm32-drive-uart.md) before connecting it to the host controller.
 
-#### GD32 Ender-3 stepper controller
+##### GD32 Ender-3 stepper controller
 
 The checked-in source is a patch against Marlin `2.1.2.5`, not a complete Marlin checkout. Rebuild it as follows:
 
@@ -224,7 +370,7 @@ platformio run -e STM32F103RE_creality
 
 Flash the resulting image from a FAT32 microSD card only after reviewing the [GD32 guide](firmware/gd32-stepper/README.md). This derived target is licensed under GPL-3.0-only, unlike the repository's original MIT-licensed material.
 
-#### ESP32 hose controller
+##### ESP32 hose controller
 
 ```sh
 cd firmware/esp32-hose
@@ -239,9 +385,9 @@ pio run -t upload --upload-port /dev/ttyUSB0
 
 Read the hose-controller README before wiring the actuator; it requires a separate 5-6 V supply sized for servo stall current and a common ground.
 
-#### ODESC V4.2 (experimental)
+##### ODESC V4.2
 
-Build this target only on a bench after reading the full target README. Its current source and board-specific safety limitations are documented there.
+The deployed, motor-tested image and rollback artifacts are under [`firmware/odesc-v42/releases/external-vbus-gpio3-stable-20260811/`](firmware/odesc-v42/releases/external-vbus-gpio3-stable-20260811/). Read that release and the target README before choosing an image. Build or flash this target only on an isolated bench with the mower phases disconnected for the first boot.
 
 ```sh
 cd firmware/odesc-v42/source/Firmware
@@ -251,13 +397,15 @@ tup
 
 The output is created under `build/`. A successful build is not proof that the firmware is safe to flash or operate at pack voltage.
 
-### 5. Verify before motion
+#### 5. Bring the system online
 
-1. Confirm the board revision, target, pinout, and firmware revision match.
-2. Verify common ground and voltage levels before joining UART connections.
-3. Start with mechanisms unloaded or wheels raised.
-4. Confirm watchdog and stop behavior before nonzero motor commands.
-5. Record a sanitized test result in the target documentation or local diagnostics archive.
+1. With motor power disconnected, power the host and confirm the STM32, GD32, ODESC, and BNO080 links appear healthy.
+2. Join the `rover` access point and open `http://192.168.4.1/`.
+3. Verify drivetrain encoder values on the host, then test left and right tracks separately with the wheels raised.
+4. Open `/steppers` and jog X yaw, Y pitch, and Z mower height at low speed. Correct direction and limits before attaching the hose or cutting line.
+5. Open `/sensors`, calibrate the BNO080 in its final mounted position, and verify heading changes in the correct direction.
+6. Test ODESC M0 without cutting line, then test the separate hose actuator from its controller page.
+7. Confirm every watchdog and `STOP ALL` path before the first ground test. Seal the electronics enclosures only after this complete dry commissioning pass.
 
 ## Repository map
 
