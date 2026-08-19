@@ -7,9 +7,9 @@ This is an open source outdoor garden robot that can mow grass and water plants.
 
 I spend hours per week gardening and mowing grass. As someone into robotics, I realized that I could make a garden rover that automates all of this for me. This robot gave be a reason to learn about robotics and helped automate my daily chores.
 
-[**Watch the demo**](https://youtu.be/P-olpegfmmU) · [**128-hour Macondo journal**](https://macondo.hackclub.com/projects/9276) · [**Browse the CAD**](CAD/)
+[**Watch the demo**](https://youtu.be/P-olpegfmmU) · [**Macondo journal**](https://macondo.hackclub.com/projects/9276) · [**See the assembly**](CAD/)
 
-[![Autonomous Garden Rover demo](https://i.ytimg.com/vi/P-olpegfmmU/maxresdefault.jpg)](https://youtu.be/P-olpegfmmU)
+[![Autonomous Garden Rover demo](https://i.y    timg.com/vi/P-olpegfmmU/maxresdefault.jpg)](https://youtu.be/P-olpegfmmU)
 
 ## Features
 
@@ -23,14 +23,16 @@ I spend hours per week gardening and mowing grass. As someone into robotics, I r
 
 ## System architecture
 
+To replicate and built the rover, one should understand that there is one host computer, and many sub-system computers that control the whole rover. Each sub-system is linked using a UART channel to the host computer. This means that the host controller can be any computer you want, from a raspberry pi to a esp32.
+
 | Subsystem       | Hardware                | Purpose                                            |
 | --------------- | ----------------------- | -------------------------------------------------- |
-| Main controller | ESP32-P4 + ESP32-C6     | Web UI, automation, OTA, audio, storage, telemetry |
-| Drivetrain      | STM32F103 + 2 × BTS7960 | Controls four drive motors using encoder feedback  |
-| Tool motion     | GD32F303 Ender-3 board  | Controls mower height and turret axes              |
-| Mower           | ODESC V4.2 + C6374      | BLDC mower control                                 |
-| Heading         | BNO080                  | Heading feedback                                   |
-| Hose valve      | ESP32-WROOM-32 + MG996  | Wireless faucet control                            |
+| Main controller | ESP32-P4 + ESP32-C6     | Controls, AI processing and autonomous |
+| Drivetrain      | STM32F103  | Encoder feedback and drivetrain  |
+| Stepper motion  | GD32F303 Ender-3 board  | Controls mower height and turret axes              |
+| Mower           | STM32 oDrive clone      | Controls the C6374 mowing motor                               |
+| Pigeon         | BNO080                  | The 9 axis IMU                                   |
+| Hose valve      | ESP32-WROOM-32   | Wireless faucet control                            |
 
 ### Electrical schematic
 
