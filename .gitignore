@@ -24,6 +24,9 @@ compile_commands.json
 .pio/
 
 **/rover_control_key.h
+firmware/esp32-p4/images/*-private.bin
+firmware/esp32-p4/images/*-private.elf
+firmware/esp32-p4/images/*-private.hex
 *.pem
 *.key
 *.crt
