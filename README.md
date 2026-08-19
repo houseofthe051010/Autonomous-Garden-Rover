@@ -1,26 +1,25 @@
 # Autonomous Garden Rover
 
-An open-source outdoor rover built to **mow grass and water a garden**.
+This is an open source outdoor garden robot that can mow grass and water plants. It features a powerful 3000 watt C6374 motor for mowing grass with electronic height control, and a large Nema17 turret system for watering at target places that supports a normal garden hose. The rover currently uses a 9 axis IMU + wheel encoders for autonomous function. The brain of this rover is a powerful ESP32-P4, which gives this rover the capability to listen and respond to commands using its built in microphone and speaker. 
 
-I built it around an aluminum-channel chassis, four powered 10-inch wheels, custom 3D-printed transmissions, a height-adjustable string mower, and a two-axis hose turret. An ESP32-P4 coordinates the drivetrain, mower, steppers, IMU, web controls, and wireless hose controller.
 
-I normally spend several hours mowing and watering my yard, so I wanted to build a robot that could automate both jobs while teaching me outdoor robotics, mechanical design, motor control, and embedded systems.
+# Inspiration
+
+I spend hours per week gardening and mowing grass. As someone into robotics, I realized that I could make a garden rover that automates all of this for me. This robot gave be a reason to learn about robotics and helped automate my daily chores.
 
 [**Watch the demo**](https://youtu.be/P-olpegfmmU) · [**128-hour Macondo journal**](https://macondo.hackclub.com/projects/9276) · [**Browse the CAD**](CAD/)
 
 [![Autonomous Garden Rover demo](https://i.ytimg.com/vi/P-olpegfmmU/maxresdefault.jpg)](https://youtu.be/P-olpegfmmU)
 
-## What it does
+## Features
 
-* Drives over grass using four powered 10-inch wheels with 2.5:1 printed gear reductions
-* Cuts grass using a C6374 BLDC motor and string-line head
-* Raises and lowers the mower using a NEMA 17 and rope-lift system
-* Aims a garden hose using a two-axis geared turret
-* Opens and closes the faucet using a separate wireless ESP32 controller
+* All four wheels are motorized
+* C6374 Motor offers 3000W+ of power, more than most commercial systems
+* Nema17 planetary motors lift and raise the mower using a rope system.
+* The turret system uses high reduction worm + dual stage planetary drives to shoot water
+* Water flow can be controlled using a seperate esp32 controller
 * Can be controlled from a phone or handheld controller
-* Demonstrates scripted autonomous mowing and watering routines using wheel feedback and BNO080 heading correction
-
-General navigation and obstacle avoidance are future improvements.
+* Uses a 9axis imu and encoders on all four wheels for autonomous
 
 ## System architecture
 
@@ -186,6 +185,7 @@ Recommended order:
 
 ## What I would do differently next time
 
+- Add cameras and GPS+RTK to the autonomous sensors
 - Use stronger drivetrain motors to support a higher speed and better turning (though it would increase the price to build)
 - Replace garden hose adapter system with a water tank onboard the rover
 - Make a custom PCB that combines all the electronics and sub systems into one board with quick connectors for peripherals (much more expensive though)
