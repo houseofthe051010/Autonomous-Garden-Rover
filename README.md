@@ -1,10 +1,10 @@
 # Autonomous Garden Rover
 
-This is an open source outdoor garden robot that can mow grass and water plants. It features a powerful 3000 watt C6374 motor for mowing grass with electronic height control, and a large Nema17 turret system for watering at target places that supports a normal garden hose. The rover currently uses a 9 axis IMU + wheel encoders for autonomous function. The brain of this rover is a powerful ESP32-P4, which gives this rover the capability to listen and respond to commands using its built in microphone and speaker. 
+This is an open source outdoor garden robot that can mow grass and water plants for under $400. It features a powerful 3000 watt C6374 motor for mowing grass with electronic height control, and a large Nema17 turret system for watering at target places that supports a normal garden hose. The rover currently uses a 9 axis IMU + wheel encoders for autonomous function. The brain of this rover is a powerful ESP32-P4, which gives this rover the capability to listen and respond to commands using its built in microphone and speaker. 
 
 ## Inspiration
 
-I spend hours per week gardening and mowing grass. As someone into robotics, I realized I could build a garden rover to automate some of these repetitive chores. This project gave me a reason to learn more about robotics while building something useful for my yard.
+I spend hours each week gardening and mowing grass. As someone into robotics, I realized I could build a garden rover to automate some of these repetitive chores. This project gave me a reason to learn more about robotics while building something useful for my yard.
 
 [**Watch the demo**](https://youtu.be/P-olpegfmmU) · [**Macondo journal**](https://macondo.hackclub.com/projects/9276) · [**See the assembly**](CAD/)
 
@@ -12,6 +12,8 @@ I spend hours per week gardening and mowing grass. As someone into robotics, I r
 
 ## Features
 
+
+* Under $400, anyone can build it
 * All four wheels are motorized
 * C6374 Motor offers 3000W+ of power, more than most commercial systems
 * Nema17 planetary motors lift and raise the mower using a rope system.
@@ -19,12 +21,17 @@ I spend hours per week gardening and mowing grass. As someone into robotics, I r
 * Water flow can be controlled using a seperate esp32 controller
 * Can be controlled from a phone or handheld controller
 * Uses a 9axis imu and encoders on all four wheels for autonomous
+* The aluminum chassis bends and acts as a suspension
+
 
 # Building it yourself
 
+The complete development process is documented in my [Macondo journal](https://macondo.hackclub.com/projects/9276).
+Below is a guide on how build the rover.
+
 ## System architecture
 
-To replicate and built the rover, one should understand that there is one host computer, and many sub-system computers that control the whole rover. Each sub-system is linked using a UART channel to the host computer. This means that the host controller can be any computer you want, from a raspberry pi to a esp32.
+To replicate and built the rover, one should understand that there is one host computer, and many sub-system computers that control the whole rover. Each sub-system is linked using a UART channel to the host computer. This means that the host controller can be any computer you want, from a raspberry pi using ROS 2 to a esp32.
 
 | Subsystem       | Hardware                | Purpose                                            |
 | --------------- | ----------------------- | -------------------------------------------------- |
@@ -35,155 +42,61 @@ To replicate and built the rover, one should understand that there is one host c
 | Pigeon         | BNO080                  | The 9 axis IMU                                   |
 | Hose valve      | ESP32-WROOM-32   | Wireless faucet control                            |
 
-### Electrical schematic
+## Why have many scattered subsystems?
+
+I also designed a single-board host computer that combines the major electronics onto one PCB, with connectors for each peripheral. I haven't manufactured or tested it yet, as it is a option for people wanting to build this project to avoid the hassle of sub systems and communication links. The gerber files for the PCB is at:
+
+[**Single-board host computer schematic and PCB files**](Schematics/Prototype%20single%20board%20host%20computer/)
+
+The benefit with my current electronics layout is that it is significantly cheaper (helps keep the 400 dollar budget) and easier to repair, as the PCBs are already mass produced and working. Its like comparing a mini pc and a desktop pc, you can swap out parts in the desktop whenever you want. 
+
+### Block schematic
+
+This is a block level schematic of how each system is split
 
 ![Block-level electrical schematic](pictures/block%20level%20schematic%20picture%20kicad.png)
 
-Editable KiCad files are available in [`Schematics/Block-level schematic/`](Schematics/Block-level%20schematic/).
+Kicad: [`Schematics/Block-level schematic/`](Schematics/Block-level%20schematic/).
 
-### Optional single-board controller
-
-I also designed an experimental four-layer PCB that combines the host, motor drivers, stepper drivers, power conversion, IMU, and expansion I/O.
-
-The physical rover currently uses separate controller boards connected over UART because they are cheaper, easier to replace, and easier to repair.
-
-![Prototype combined PCB](pictures/prototype%20single%20board%20computer%20pcb%20layout.png)
-
-[KiCad source and Gerbers](Schematics/Prototype%20single%20board%20host%20computer/)
 
 ## Mechanical design
 
-### Drivetrain
 
-The rover uses an aluminum U-channel chassis and four independently powered wheels.
 
-The original drivetrain used a 1.5:1 reduction, but outdoor testing showed that it did not have enough turning torque on grass. I redesigned the transmissions to use 16:40 gears for a **2.5:1 reduction**.
 
-### Mower
-
-The original mower used printed sacrificial blade arms. They broke too frequently during outdoor testing, so I replaced them with a string-line cutting head.
-
-A NEMA 17 gearbox drives two rope spools that raise and lower the mower from four points.
-
-### Watering turret
-
-The turret uses:
-
-* Module-4 worm-drive yaw axis
-* Eight 608 bearings
-* 4.36:1 yaw input gearbox
-* 18:1 pitch gearbox
-* NEMA 17 motors
-
-A separate ESP32-controlled actuator mounted at the faucet opens and closes the water supply wirelessly.
-
-## Build journey
-
-The rover went through several major redesigns during outdoor testing:
-
-* Wood proof of concept → aluminum chassis
-* 1.5:1 drivetrain → 2.5:1 drivetrain for more torque
-* Printed razor blades → string-line mower
-* Redesigned turret gearbox after slipping
-* Rebuilt electronics after motor-driver failures and a vibration-induced short
-* Added the ESP32-P4 host, UART subsystem control, OTA updates, and autonomous routines
-
-| Early chassis                                                                             | Mower CAD                                                                             |
-| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| ![Early chassis](https://cdn.hackclub.com/019ed8c7-f932-7aa7-a0f4-63fcd1a28b7b/image.png) | ![Mower CAD](https://cdn.hackclub.com/019f2ad2-f248-7ab3-a5b5-6bd28f143fd7/image.png) |
-
-| Turret                                                                             | Faucet controller                                                                             |
-| ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| ![Turret](https://cdn.hackclub.com/019f7615-8497-7da8-bab4-61416e4c4f07/image.png) | ![Faucet controller](https://cdn.hackclub.com/019fc962-4971-7d67-b8b5-c9f91bc0d1e1/image.png) |
-
-The complete development process is documented in my [128-hour Macondo journal](https://macondo.hackclub.com/projects/9276).
-
-## CAD and fabrication files
-
-![Full Fusion 360 assembly](pictures/full%20mower%20assembly%20render%20fusion360.png)
-
-| Location                                                               | Contents                                  |
-| ---------------------------------------------------------------------- | ----------------------------------------- |
-| [`CAD/Assembly/`](CAD/Assembly/)                                       | Complete Fusion assembly and STEP exports |
-| [`CAD/Sub-assemblies/`](CAD/Sub-assemblies/)                           | Editable subsystem designs                |
-| [`CAD/Individual Printable STLs/`](CAD/Individual%20Printable%20STLs/) | 72 printable STL files                    |
-
-The repository includes the editable Fusion 360 designs, complete STEP exports, individual STEP parts, and printable STL files needed to reproduce the mechanical system.
 
 ## Firmware
 
-The ESP32-P4 is the main controller. Individual controllers handle real-time motor control and communicate with it over UART.
-
-* **STM32 drivetrain:** left/right drivetrain commands and wheel feedback
-* **GD32 stepper controller:** mower height, turret yaw, and turret pitch
-* **ODESC:** mower speed and telemetry
-* **BNO080:** heading feedback
-* **Hose ESP32:** wireless faucet control
-
-The autonomous demo contains two scripted routines:
-
-* A heading-controlled mowing pass
-* A watering sweep that opens the faucet, positions the turret, sweeps the hose, and advances the rover
-
-Firmware source is under [`firmware/`](firmware/).
 
 ## Bill of materials
 
-**Keep the existing BOM table here.**
+| Item                                                         | Qty. | Unit price | Shipping |       Total | Link                                                                                                                 |
+| ------------------------------------------------------------ | ---: | ---------: | -------: | ----------: | -------------------------------------------------------------------------------------------------------------------- |
+| Waveshare ESP32-P4-WIFI6 development board                   |    1 |     $26.87 |    $0.00 |      $26.87 | [Amazon](https://www.amazon.com/dp/B0FM3SPXZG)                                                                       |
+| Steelworks 3/4 in x 8 ft aluminum channel                    |    2 |     $19.98 |    $0.00 |      $39.96 | [Lowe's](https://www.lowes.com/pd/Steelworks-3-4-in-W-x-8-ft-L-Mill-Finished-Aluminum-Weldable-Trim-Channel/3058185) |
+| LGXSHOP C6374 170KV sensored BLDC motor                      |    1 |     $29.50 |   $10.00 |      $39.50 | [Amazon](https://www.amazon.com/dp/B0GR88K1XP)                                                                       |
+| STM32F103C6T6 Blue Pill development board                    |    1 |      $1.75 |    $0.00 |       $1.75 | [AliExpress](https://www.aliexpress.us/item/3256809531654480.html)                                                   |
+| BTS7960 high-current motor driver board                      |    2 |      $5.56 |    $0.00 |      $11.12 | [AliExpress](https://www.aliexpress.us/item/3256812145540065.html)                                                   |
+| DS3230 PRO drivetrain servo motors (4-pack)                  |    1 |     $51.37 |    $0.00 |      $51.37 | [AliExpress](https://www.aliexpress.us/item/3256808314550897.html)                                                   |
+| STEPPERONLINE NEMA 17 stepper motors (3-pack)                |    1 |     $25.99 |    $0.00 |      $25.99 | [Amazon](https://www.amazon.com/dp/B0B38GHRH8)                                                                       |
+| Stepper controller board (12-24 VDC)                         |    1 |     $22.99 |    $0.00 |      $22.99 | [Amazon](https://www.amazon.com/dp/B0CCVSMGXR)                                                                       |
+| EONO PETG 3D printer filament 1 kg black                     |    2 |      $9.99 |    $0.00 |      $19.98 | [Amazon](https://www.amazon.com/EONO3D-Printer-Filament-1-75mm-2-2lbs/dp/B0G2BQQ5RT)                                 |
+| 608 sealed steel bearings (20-pack)                          |    1 |      $4.99 |    $0.00 |       $4.99 | [Amazon](https://www.amazon.com/dp/B0GX14YCFF)                                                                       |
+| M3 screw kit (420-piece)                                     |    1 |      $8.98 |    $0.00 |       $8.98 | [Amazon](https://www.amazon.com/dp/B0CSWD34KJ)                                                                       |
+| Flipsky ODESC 56 V v4.2 single-axis controller               |    1 |     $39.99 |    $0.00 |      $39.99 | [Amazon](https://www.amazon.com/dp/B0CB64MVHC)                                                                       |
+| 22 AWG wire (10 m)                                           |    1 |      $2.81 |    $0.00 |       $2.81 | [AliExpress](https://www.aliexpress.us/item/3256801511977665.html)                                                   |
+| 36 V 10.4 Ah lithium battery with charger and XT60 connector |    1 |     $79.99 |    $0.00 |      $79.99 | [eBay](https://www.ebay.com/itm/318206384216)                                                                        |
+| 20 A buck converter                                          |    2 |      $3.58 |    $0.00 |       $7.16 | [AliExpress](https://www.aliexpress.us/item/3256808333733098.html)                                                   |
+| XL4005 buck converter                                        |    1 |      $1.99 |    $0.00 |       $1.99 | [AliExpress](https://www.aliexpress.us/item/3256808679872256.html)                                                   |
+| MG996 servo motor                                            |    1 |      $3.44 |    $0.00 |       $3.44 | [AliExpress](https://www.aliexpress.us/item/3256802804659030.html)                                                   |
+| ESP32-WROOM-32 development board with U.FL                   |    1 |      $7.32 |    $0.00 |       $7.32 | [AliExpress](https://www.aliexpress.us/item/3256807142919728.html)                                                   |
+| BNO080/BNO085 9-DOF sensor module                            |    1 |     $18.99 |    $0.00 |      $18.99 | [Amazon](https://www.amazon.com/dp/B0HCBRBZ76)                                                                       |
+| Hello Hobby 3/8 in x 36 in wood dowel                        |    1 |      $0.78 |    $0.00 |       $0.78 | [Walmart](https://www.walmart.com/ip/684374236)                                                                      |
+| Tool Bench 40 ft diamond-braid rope with winder              |    1 |      $1.50 |    $0.00 |       $1.50 | [Dollar Tree](https://www.dollartree.com/tool-bench-40-ft-diamond-braid-rope-with-winder-1-ct/295406)                |
+| **Estimated total**                                          |      |            |          | **$417.47** |                                                                                                                      |
 
-## Build it yourself
 
-### Safety
 
-This rover contains a 10S lithium battery, high-current motor controllers, a high-speed mower, geared mechanisms, and a powered hose valve.
-
-* Use a fuse and accessible battery disconnect
-* Remove mower line during initial testing
-* Test the drivetrain with the wheels raised
-* Never power motors from a microcontroller rail
-* Verify regulator voltages before connecting electronics
-* Keep people and pets away while testing
-
-### Mechanical assembly
-
-1. Print the parts from [`CAD/Individual Printable STLs/`](CAD/Individual%20Printable%20STLs/).
-2. Build the aluminum chassis using the full STEP assembly as a reference.
-3. Install the four 2.5:1 drivetrain modules.
-4. Install the mower and rope-lift mechanism.
-5. Assemble the yaw and pitch turret.
-6. Mount the electronics.
-7. Assemble the separate faucet controller.
-
-### Wiring
-
-Use the block-level schematic and wiring tables below when connecting the controllers.
-
-**Keep your existing power-distribution, UART, STM32/BTS7960, stepper, ODESC, and hose-controller wiring tables here.**
-
-### Firmware installation
-
-Flash and test each controller separately before connecting the full system.
-
-Recommended order:
-
-1. GD32 stepper controller
-2. STM32 drivetrain controller
-3. Hose ESP32
-4. ODESC
-5. ESP32-P4 host
-
-**Keep your existing build and flashing commands here.**
-
-### First startup
-
-1. Power the electronics with the motor outputs disconnected.
-2. Verify communication with each subsystem.
-3. Test the drivetrain with the wheels raised.
-4. Jog each stepper axis.
-5. Calibrate and verify the BNO080.
-6. Test the mower without cutting line.
-7. Test the faucet actuator.
-8. Confirm the emergency-stop behavior before outdoor testing.
 
 
 ## What I would do differently next time
