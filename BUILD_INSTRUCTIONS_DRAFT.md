@@ -57,8 +57,6 @@ The complete cut list is:
 | Battery and turret rails | 400 | 4 |
 | ODESC/stepper support | 300 | 1 |
 
-These cuts total 5,612 mm (18.4 ft), before saw kerf and waste. Buy **three 8-foot channels**.
-
 Lay out the 420 mm and 670 mm pieces as shown.
 
 ![Main chassis cut layout](pictures/assembly-guide/rover-build-01-frame-cut-layout.png)
@@ -327,10 +325,10 @@ Use the [block-level KiCad schematic](Schematics/Block-level%20schematic/) as th
 | --- | --- |
 | 36 V battery | ODESC V4.2 battery input |
 | 36 V battery → 24 V converter | GD32 stepper board and three NEMA 17 motors |
-| 36 V battery → **8.0 V** converter | Both BTS7960 motor-power inputs |
-| 8 V rail → 5 V XL4005 | ESP32-P4, STM32, BNO080, and BTS7960 logic |
+| 36 V battery → 9 V converter | Both BTS7960 motor-power inputs |
+| 9 V rail → 5 V XL4005 | ESP32-P4, STM32, BNO080, and BTS7960 logic |
 
-The current KiCad drawing labels the drive rail `+9V`; set it to **8.0 V** for this build, matching the build notes and `DRIVE_BUS_VOLTAGE` in the ESP32-P4 firmware. All rails must share ground.
+All rails must share ground.
 
 Solder two fused branches in parallel at the XT60 battery output: one for the ODESC and one for the buck converters/main electronics.
 
@@ -364,13 +362,13 @@ The hose controller is separate and communicates wirelessly over ESP-NOW. Its fi
 
 The enclosure layout is:
 
-- Red: 36→8 V and 36→24 V converters
+- Red: 36→9 V and 36→24 V converters
 - Purple: two BTS7960 drivers
 - Yellow: STM32 drivetrain controller
 - Green: ESP32-P4
 - Black: BNO080, mounted above the ESP32-P4
 - White: Waveshare speaker
-- Gray: 8→5 V XL4005, insulated against shorts
+- Gray: 9→5 V XL4005, insulated against shorts
 
 ![Main-electronics component layout](pictures/assembly-guide/rover-build-64-main-electronics-layout.png)
 
@@ -385,11 +383,13 @@ Fit every lid only after the electrical checks pass.
 
 ![Rover electronics with lids installed](pictures/assembly-guide/rover-build-63-rover-electronics-lids.png)
 
-## 9. First power-on
+## 9. First power on
 
-1. Leave the cutter off, keep the lift ropes unloaded, and raise the wheels off the ground.
-2. Verify polarity and continuity, then set the 24 V, 8 V, and 5 V converters before connecting controllers.
-3. Flash the controller images using the steps in [`INSTRUCTIONS.md`](INSTRUCTIONS.md).
-4. Test one subsystem at a time: drivetrain, encoder feedback, height axis, yaw, pitch, hose controller, then ODESC.
-5. Confirm every stop command and communication timeout works before fitting the cutting attachment.
-6. Close the enclosures, add strain relief, and keep all wires clear of gears, ropes, wheels, and the mower shaft.
+1. Connect to the rover Wi-Fi.
+2. From there, you can control each part of the rover.
+3. There is a tank drive mode, battery history mode, and sensor mode.
+4. You can also record microphone inputs and respond using audio outputs.
+
+## 10. Bonus handheld controller
+
+1. I have also custom-made a handheld controller that connects to the rover, from which you can control the rover, mower, and turret. It is much better than the phone screen for controlling the rover. The controller is part of my Claw Drone project; view how to build it here: [Claw Drone](https://github.com/houseofthe051010/Claw-Drone).
