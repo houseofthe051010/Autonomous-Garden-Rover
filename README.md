@@ -64,3 +64,10 @@ Kicad: [`Schematics/Block-level schematic/`](Schematics/Block-level%20schematic/
 | Hello Hobby 3/8 in x 36 in wood dowel                        |    1 |      $0.78 |       $0.78 | [Walmart](https://www.walmart.com/ip/684374236)                                                                      |
 | Tool Bench 40 ft diamond-braid rope with winder              |    1 |      $1.50 |       $1.50 | [Dollar Tree](https://www.dollartree.com/tool-bench-40-ft-diamond-braid-rope-with-winder-1-ct/295406)                |
 | **Estimated total**                                          |      |            | **$397.47** |                                                                                                                      |
+
+## What I would do differently next time
+
+- Add cameras and GPS+RTK to the autonomous sensors
+- Use stronger drivetrain motors to support a higher speed and better turning (though it would increase the price to build)
+- Replace garden hose adapter system with a water tank onboard the rover
+- Make a custom PCB that combines all the electronics and sub systems into one board with quick connectors for peripherals (much more expensive though)
