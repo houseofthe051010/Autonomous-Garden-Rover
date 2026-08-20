@@ -70,7 +70,7 @@ Kicad: [`Schematics/Block-level schematic/`](Schematics/Block-level%20schematic/
 | Tool Bench 40 ft diamond-braid rope with winder              |    1 |      $1.50 |       $1.50 | [Dollar Tree](https://www.dollartree.com/tool-bench-40-ft-diamond-braid-rope-with-winder-1-ct/295406)                |
 | **Estimated total**                                          |      |            | **$397.47** |                                                                                                                      |
 
-## What I would do differently next time
+## What I would do differently next time and plan for in the future
 
 - Add cameras and GPS+RTK to the autonomous sensors
 - Use stronger drivetrain motors to support a higher speed and better turning (though it would increase the price to build)
@@ -86,4 +86,3 @@ In this repo, I have included everything needed to replicate and modify this pro
 - CAD source, assemblies, steps, and STLs
 - Visual instruction manual
 - Electrical schematics
-- 
