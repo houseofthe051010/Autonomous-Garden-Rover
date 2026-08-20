@@ -18,7 +18,6 @@ I spend hours each week gardening and mowing grass. As someone into robotics, I 
 * C6374 Motor offers 3000W+ of power, more than most commercial systems
 * Nema17 planetary motors lift and raise the mower using a rope system.
 * The turret system uses high reduction worm + dual stage planetary drives to shoot water
-* Water resistant
 * Has a microphone and speaker and can run small ai vision/text recognition models
 * Water flow can be controlled using a seperate esp32 controller
 * Can be controlled from a phone or handheld controller
@@ -27,6 +26,7 @@ I spend hours each week gardening and mowing grass. As someone into robotics, I 
 * Supports raspberry pi 5 with ROS 2 as brain
 * Supports a custom hand held controller from my previous FPV claw drone project
 * Advanced flexibility for conneting new sensors, cameras, and electronics
+* Water resistant
 
 
 # Building it yourself
