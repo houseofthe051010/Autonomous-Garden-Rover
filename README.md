@@ -22,6 +22,7 @@ I spend hours each week gardening and mowing grass. As someone into robotics, I 
 * Can be controlled from a phone or handheld controller
 * Uses a 9axis imu and encoders on all four wheels for autonomous
 * The aluminum chassis bends and acts as a suspension
+* Supports raspberry pi 5 with ROS 2 as brain.
 
 
 # Building it yourself
@@ -71,3 +72,14 @@ Kicad: [`Schematics/Block-level schematic/`](Schematics/Block-level%20schematic/
 - Use stronger drivetrain motors to support a higher speed and better turning (though it would increase the price to build)
 - Replace garden hose adapter system with a water tank onboard the rover
 - Make a custom PCB that combines all the electronics and sub systems into one board with quick connectors for peripherals (much more expensive though)
+
+
+## Repository Structure
+
+In this repo, I have included everything needed to replicate and modify this project
+
+- Firmware images and source code
+- CAD source, assemblies, steps, and STLs
+- Visual instruction manual
+- Electrical schematics
+- 
