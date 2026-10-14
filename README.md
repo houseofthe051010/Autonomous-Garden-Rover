@@ -10,7 +10,7 @@ I spend hours each week gardening and mowing grass. As someone into robotics, I 
 
 [![Autonomous Garden Rover demo](https://i.ytimg.com/vi/P-olpegfmmU/maxresdefault.jpg)](https://youtu.be/P-olpegfmmU)
 
-### CAD assembly:
+### CAD assembly
 
 ![CAD assembly](pictures/cad-assembly.png)
 
