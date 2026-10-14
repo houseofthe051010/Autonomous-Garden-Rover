@@ -407,6 +407,14 @@ Fit every lid only after the electrical checks pass.
 
 ![Rover electronics with lids installed](pictures/assembly-guide/rover-build-63-rover-electronics-lids.png)
 
+
+### 9. Add camera sensor
+
+
+### 10. Add GPS sensor
+
+Print all 3 stls in the printable STLs cad folder for electronics holder: GPS holder
+
 ### 9. First power on
 
 1. Connect to the rover Wi-Fi.

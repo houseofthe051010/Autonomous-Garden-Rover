@@ -6,7 +6,7 @@ This is an open source outdoor garden robot that can mow grass and water plants 
 
 I spend hours each week gardening and mowing grass. As someone into robotics, I realized I could build a garden rover to automate some of these repetitive chores. This project gave me a reason to learn more about robotics while building something useful for my yard.
 
-[**Watch the demo**](https://youtu.be/P-olpegfmmU) · [**Forge journal**](https://forge.hackclub.com/projects/3732) · [**See the assembly**](CAD/)
+[**Watch the full rover demo**](https://youtu.be/P-olpegfmmU) · [**Forge journal**](https://forge.hackclub.com/projects/3732) · [**See the assembly**](CAD/) · [**Watch the firmware demo**](https://www.youtube.com/watch?v=vQ5m_EN1jJQ) 
 
 [![Autonomous Garden Rover demo](https://i.ytimg.com/vi/P-olpegfmmU/maxresdefault.jpg)](https://youtu.be/P-olpegfmmU)
 
