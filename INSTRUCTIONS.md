@@ -485,6 +485,19 @@ Mount it along the front side of the rover
 I have compiled images of firmware for every rover controller in [`firmware/`](firmware/). The `source/` folders also have their code if you want to modify them.
 
 
+### XIAO ESP32S3 camera controller
+
+The source and images are in [`firmware/xiao-esp32s3-camera/`](firmware/xiao-esp32s3-camera/).
+
+For a fresh flash, write [`camera-full-flash-8mb.bin`](firmware/xiao-esp32s3-camera/images/camera-full-flash-8mb.bin) at 0x0:
+
+```sh
+esptool --chip esp32s3 --port COM3 write-flash 0x0 firmware/xiao-esp32s3-camera/images/camera-full-flash-8mb.bin
+```
+
+For updates, connect to the camera Wi-Fi, open `http://192.168.4.1/update`, and upload [`camera-ota.bin`](firmware/xiao-esp32s3-camera/images/camera-ota.bin).
+
+
 ### ESP32-P4 main controller
 
 

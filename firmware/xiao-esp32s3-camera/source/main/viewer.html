@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#05080c">
+  <title>XIAO Sense Camera</title>
+  <style>
+    *{box-sizing:border-box;letter-spacing:0;-webkit-tap-highlight-color:transparent}
+    html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#000;color:#f4f7f9;font-family:system-ui,sans-serif}
+    #stage{position:fixed;inset:0;background:#000;touch-action:manipulation}canvas{display:none;width:100%;height:100%}
+    #source{position:fixed;width:1px;height:1px;opacity:.001;pointer-events:none}#source.normal{inset:0;width:100%;height:100%;opacity:1;object-fit:contain}
+    .top{position:fixed;z-index:4;inset:0;pointer-events:none}.cluster{position:absolute;top:10px;display:flex;min-width:0;gap:7px;align-items:center;pointer-events:auto}.cluster:first-child{left:10px}.cluster:last-child{right:10px}.badge,.icon{min-height:40px;border:1px solid #ffffff42;border-radius:7px;background:#071018df;color:#fff;padding:8px 11px;font:650 13px system-ui;text-decoration:none}
+    .badge{display:flex;min-width:0;max-width:100%;align-items:center;gap:7px}.badge span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.dot{width:9px;height:9px;flex:0 0 9px;border-radius:50%;background:#84909a}.dot.good{background:#29c98b}.dot.fair{background:#e6b43a}.dot.weak{background:#ef6157}
+    .dock{position:fixed;z-index:5;left:50%;bottom:12px;transform:translateX(-50%);width:min(620px,calc(100% - 20px));background:#071018ed;border:1px solid #ffffff38;border-radius:8px;padding:10px;backdrop-filter:blur(8px)}
+    .audio-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.listen{min-width:112px;border:0;border-radius:6px;background:#087bb7;color:white;padding:10px 14px;font-weight:750}.listen.active{background:#b52b27}
+    .meter{height:8px;flex:1;background:#26313a;border-radius:4px;overflow:hidden}.meter i{display:block;width:0;height:100%;background:#27b989;transition:width .2s}.meter i.hot{background:#e0534d}
+    .settings{display:grid;grid-template-columns:84px 1fr 62px 72px 1fr 50px;gap:8px;align-items:center;margin-top:9px;font-size:12px;color:#c5d0d8}.settings input{width:100%;accent-color:#159bd7}.value{font-variant-numeric:tabular-nums;color:#fff;text-align:right}
+    #hint{position:fixed;z-index:2;left:50%;bottom:112px;transform:translateX(-50%);padding:7px 11px;border-radius:7px;background:#000b;font-size:13px;white-space:nowrap;transition:opacity .4s}
+    @media(max-width:560px){.settings{grid-template-columns:74px minmax(0,1fr) 54px}.settings label:nth-of-type(2){grid-column:1}.dock{padding:9px}.badge span:last-child{max-width:92px}.icon{padding:8px}.cluster{gap:5px}}
+  </style>
+</head>
+<body>
+  <div id="stage"><canvas id="view"></canvas><img id="source" alt="Live camera feed" crossorigin="anonymous"></div>
+  <div class="top">
+    <div class="cluster"><div class="badge"><i id="signalDot" class="dot"></i><span id="signal">Starting</span></div></div>
+    <div class="cluster"><button id="vrButton" class="icon" type="button">VR Off</button><a class="icon" href="/configs">Settings</a></div>
+  </div>
+  <div id="hint">Tap video for fullscreen</div>
+  <div class="dock" id="dock">
+    <div class="audio-head"><button id="listen" class="listen" type="button">Listen</button><div class="meter"><i id="meter"></i></div><span id="level" class="value">-96 dB</span></div>
+    <div class="settings">
+      <label for="micGain">Mic gain</label><input id="micGain" type="range" min="-12" max="30" step="0.5"><span id="micGainValue" class="value">0 dB</span>
+      <label for="volume">Output</label><input id="volume" type="range" min="0" max="200" step="5"><span id="volumeValue" class="value">100%</span>
+    </div>
+  </div>
+  <script>
+    const host=location.hostname.includes(':')?'['+location.hostname+']':location.hostname;
+    const source=document.getElementById('source'),canvas=document.getElementById('view'),ctx=canvas.getContext('2d',{alpha:false}),stage=document.getElementById('stage');
+    const dock=document.getElementById('dock'),vrButton=document.getElementById('vrButton'),hint=document.getElementById('hint');
+    let vr=localStorage.getItem('senseVrMode')==='1';source.src=location.protocol+'//'+host+':81/video';
+    function updateVr(){vrButton.textContent='VR '+(vr?'On':'Off');source.classList.toggle('normal',!vr);canvas.style.display=vr?'block':'none'}updateVr();
+    function resize(){const dpr=Math.min(devicePixelRatio||1,1.5),w=Math.round(innerWidth*dpr),h=Math.round(innerHeight*dpr);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h}}
+    function drawContained(dx,dy,dw,dh){const iw=source.naturalWidth,ih=source.naturalHeight;if(!iw||!ih)return;const scale=Math.min(dw/iw,dh/ih),w=iw*scale,h=ih*scale;ctx.drawImage(source,dx+(dw-w)/2,dy+(dh-h)/2,w,h)}
+    function render(){if(!vr)return;resize();const w=canvas.width,h=canvas.height,half=Math.floor(w/2);ctx.fillStyle='#000';ctx.fillRect(0,0,w,h);drawContained(0,0,half,h);drawContained(half,0,w-half,h);ctx.fillStyle='#222';ctx.fillRect(half-1,0,2,h)}setInterval(render,33);
+    stage.addEventListener('click',async()=>{try{if(!document.fullscreenElement){await stage.requestFullscreen({navigationUI:'hide'});if(screen.orientation?.lock)try{await screen.orientation.lock('landscape')}catch(_){}}hint.style.opacity='0'}catch(_){hint.textContent='Fullscreen blocked'}});
+    dock.addEventListener('click',e=>e.stopPropagation());vrButton.addEventListener('click',e=>{e.stopPropagation();vr=!vr;localStorage.setItem('senseVrMode',vr?'1':'0');updateVr()});setTimeout(()=>hint.style.opacity='0',5000);
+
+    const listen=document.getElementById('listen'),volume=document.getElementById('volume'),micGain=document.getElementById('micGain');
+    let audioContext,outputGain,nextPlay=0,audioAbort,listening=false,remainder=null;
+    volume.value=localStorage.getItem('senseOutputVolume')||'100';
+    function setVolume(){document.getElementById('volumeValue').textContent=volume.value+'%';localStorage.setItem('senseOutputVolume',volume.value);if(outputGain)outputGain.gain.value=Number(volume.value)/100}volume.addEventListener('input',setVolume);setVolume();
+    async function playPcm(bytes){if(!audioContext||!listening)return;let data=bytes;if(remainder){const joined=new Uint8Array(remainder.length+bytes.length);joined.set(remainder);joined.set(bytes,remainder.length);data=joined;remainder=null}if(data.length&1){remainder=data.slice(data.length-1);data=data.slice(0,-1)}if(!data.length)return;const count=data.length/2,buffer=audioContext.createBuffer(1,count,16000),out=buffer.getChannelData(0),view=new DataView(data.buffer,data.byteOffset,data.byteLength);for(let i=0;i<count;i++)out[i]=view.getInt16(i*2,true)/32768;const now=audioContext.currentTime;if(nextPlay<now+.035||nextPlay>now+.35)nextPlay=now+.065;const node=audioContext.createBufferSource();node.buffer=buffer;node.connect(outputGain);node.start(nextPlay);nextPlay+=buffer.duration}
+    async function startAudio(){audioContext=audioContext||new AudioContext({sampleRate:16000,latencyHint:'interactive'});if(!outputGain){outputGain=audioContext.createGain();outputGain.connect(audioContext.destination)}setVolume();await audioContext.resume();audioAbort=new AbortController();listening=true;listen.textContent='Stop audio';listen.classList.add('active');nextPlay=0;remainder=null;try{const response=await fetch(location.protocol+'//'+host+':82/audio.pcm',{signal:audioAbort.signal,cache:'no-store'});if(!response.ok)throw Error('audio busy');const reader=response.body.getReader();while(listening){const result=await reader.read();if(result.done)break;await playPcm(result.value)}}catch(error){if(listening)console.warn(error)}finally{stopAudio()}}
+    function stopAudio(){listening=false;if(audioAbort){audioAbort.abort();audioAbort=null}listen.textContent='Listen';listen.classList.remove('active');nextPlay=0}
+    listen.addEventListener('click',()=>listening?stopAudio():startAudio());
+    let gainTimer;function gainLabel(){document.getElementById('micGainValue').textContent=Number(micGain.value).toFixed(1)+' dB'}micGain.addEventListener('input',()=>{gainLabel();clearTimeout(gainTimer);gainTimer=setTimeout(()=>fetch('/api/audio?gain_db='+encodeURIComponent(micGain.value),{cache:'no-store'}),250)});
+    async function updateStatus(){try{const s=await fetch('/api/status',{cache:'no-store'}).then(r=>r.json());if(document.activeElement!==micGain){micGain.value=s.audio.gain_db;gainLabel()}const db=s.audio.rms_dbfs,pct=Math.max(0,Math.min(100,(db+72)*100/72)),bar=document.getElementById('meter');bar.style.width=pct+'%';bar.classList.toggle('hot',s.audio.peak_dbfs>-1);document.getElementById('level').textContent=db.toFixed(0)+' dB';const r=s.network.sta_connected?s.network.sta_rssi:s.network.ap_client_rssi,label=s.network.sta_connected?(s.network.sta_ssid+' '+r+' dBm'):(s.network.ap_clients+' direct '+(r>-127?r+' dBm':''));document.getElementById('signal').textContent=label;const dot=document.getElementById('signalDot');dot.className='dot '+(r>=-60?'good':r>=-75?'fair':'weak')}catch(_){document.getElementById('signal').textContent='Offline'}}
+    setInterval(updateStatus,1000);updateStatus();
+  </script>
+</body>
+</html>

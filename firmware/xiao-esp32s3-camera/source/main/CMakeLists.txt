@@ -1,0 +1,27 @@
+idf_component_register(
+    SRCS
+        "main.c"
+        "system_metrics.c"
+        "audio_service.c"
+        "camera_service.c"
+        "network_service.c"
+        "web_server.c"
+    INCLUDE_DIRS "."
+    EMBED_TXTFILES
+        "viewer.html"
+        "configs.html"
+        "wifi.html"
+        "update.html"
+    REQUIRES
+        app_update
+        esp_driver_i2s
+        esp_driver_tsens
+        esp_driver_ledc
+        esp_event
+        esp_http_server
+        esp_netif
+        esp_psram
+        esp_timer
+        esp_wifi
+        nvs_flash
+)
