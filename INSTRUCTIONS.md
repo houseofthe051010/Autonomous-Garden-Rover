@@ -410,74 +410,72 @@ Fit every lid only after the electrical checks pass.
 
 ### 9. Add camera sensor
 
+![Printed camera attachment parts](https://github.com/user-attachments/assets/8cc82b62-abf8-455b-bc8a-a0ebc4483b65)
+
 Print out the 3 camera attachment parts in the camera holder folder in printable stls
 
-<img width="1107" height="999" alt="image" src="https://github.com/user-attachments/assets/8cc82b62-abf8-455b-bc8a-a0ebc4483b65" />
+![Soldering the ESP32 power wires](https://github.com/user-attachments/assets/65cfc955-d5f9-4638-9f5f-974bcaafaf45)
 
 Solder wires to 5v and gnd of the esp32, like in the pic below
 
-<img width="540" height="580" alt="image" src="https://github.com/user-attachments/assets/65cfc955-d5f9-4638-9f5f-974bcaafaf45" />
-
 Route it through a back hole, and connect those wires to the main electronic hub, to the mani 5v regulator.
 
-Place the esp32 on the camera holder.stl that you printed <img width="473" height="406" alt="image" src="https://github.com/user-attachments/assets/b33a9efa-e4d6-4b99-b7db-6a9182e26038" />
+![ESP32 placed on the camera holder](https://github.com/user-attachments/assets/b33a9efa-e4d6-4b99-b7db-6a9182e26038)
+
+Place the esp32 on the camera holder.stl that you printed
+
+![Camera wires routed through the holder](https://github.com/user-attachments/assets/579653e2-0e8c-44e9-ae4f-22ee84ed3801)
 
 It should be like this with the wires coming out and you have to route them through that hole
 
-<img width="483" height="494" alt="image" src="https://github.com/user-attachments/assets/579653e2-0e8c-44e9-ae4f-22ee84ed3801" />
+![Camera protective polycarbonate](https://github.com/user-attachments/assets/525339b6-908a-46ba-a430-b712547595de)
 
 Using any sort of thin plastic, cut a 70x60mm sheet of thin polycarb (you don't need to do this, it just adds protection for the camera)
 
-<img width="566" height="442" alt="image" src="https://github.com/user-attachments/assets/525339b6-908a-46ba-a430-b712547595de" />
-
-
 Slide it over the cam.
 
-Put the aluminum attachment mounted to the aluminum, then the camera holder on top, and then the lid, so it is now mounted at the front center of the rover. 
+![Camera mounted at the front of the rover](https://github.com/user-attachments/assets/b6b88af9-ad8b-4633-8989-ccc86f97aa9e)
 
-<img width="283" height="317" alt="image" src="https://github.com/user-attachments/assets/b6b88af9-ad8b-4633-8989-ccc86f97aa9e" />
-
-
+Put the aluminum attachment mounted to the aluminum, then the camera holder on top, and then the lid, so it is now mounted at the front center of the rover.
 
 
 ### 10. Add GPS sensor
 
 Print all 3 stls in the printable STLs cad folder for electronics holder: GPS holder
 
-(insert first pic)
+![GPS holder parts](pictures/gps-install/01-gps-holder-parts.png)
 
 Cut 70x70mm aluminum and glue it on the antenna body
 
-(inset 2nd pic)
+![GPS antenna on foil](pictures/gps-install/02-gps-antenna-foil.png)
 
 It should look clean like this:
-(insert 3rd)
+
+![GPS antenna attached to aluminum plate](pictures/gps-install/03-gps-antenna-aluminum-plate.png)
 
 You are supposed to connect the wiring to this pinout on the esp32 board:
 
-(insert 6th picture)
+![ESP32 board GPS pinout](pictures/gps-install/06-gps-esp32-pinout.png)
 
+Through the hole for the wiring, use the I2C 4 pin JST connectors that came with the esp32 host computer package and attach them to the gps.
 
+![GPS board with JST wiring](pictures/gps-install/04-gps-board-jst-wiring.png)
 
-Through the hole for the wiring, use the I2C 4 pin JST connectors that came with the esp32 host computer package and attach them to the gps. 
-(insert 4th)
 You can route a long wire throughout the aluminum channel and go through the main wiring entrance, but I instead chose to just drill a hole through the casing and later seal it up with hot glue. Connect it to the esp32 connector
 
-(insert 5th)
+![GPS mounted under the rover](pictures/gps-install/05-gps-mounted-under-rover.png)
 
 Mount it along the front side of the rover
 
 
-
-
-### 9. First power on
+### 11. First power on
 
 1. Connect to the rover Wi-Fi.
 2. From there, you can control each part of the rover.
 3. There is a tank drive mode, battery history mode, and sensor mode.
 4. You can also record microphone inputs and respond using audio outputs.
 
-### 10. Bonus handheld controller
+### 12. Bonus handheld controller
 
 1. I have also custom-made a handheld controller that connects to the rover, from which you can control the rover, mower, and turret. It is much better than the phone screen for controlling the rover. The controller is part of my Claw Drone project; view how to build it here: [Claw Drone](https://github.com/houseofthe051010/Claw-Drone).
 
@@ -568,7 +566,6 @@ If you are not familiar with connecting an ST-Link, this video shows the wiring 
 
 ## What I would do differently next time
 
-- Add cameras and GPS+RTK to the autonomous sensors
 - Use stronger drivetrain motors to support a higher speed and better turning (though it would increase the price to build)
 - Replace garden hose adapter system with a water tank onboard the rover
 - Make a custom PCB that combines all the electronics and sub systems into one board with quick connectors for peripherals (much more expensive though)

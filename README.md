@@ -1,6 +1,6 @@
 # Autonomous Garden Rover
 
-This is an open source outdoor garden robot that can mow grass and water plants for under $400. It features a powerful 3000 watt C6374 motor for mowing grass with electronic height control, and a large Nema17 turret system for watering at target places that supports a normal garden hose. The rover currently uses a 9 axis IMU + wheel encoders for autonomous function. The brain of this rover is a powerful ESP32-P4, which gives this rover the capability to listen and respond to commands using its built in microphone and speaker. 
+This is an open source outdoor garden robot that can mow grass and water plants for under $500. It features a powerful 3000 watt C6374 motor for mowing grass with electronic height control, and a large Nema17 turret system for watering at target places that supports a normal garden hose. The rover currently uses a 9 axis IMU + wheel encoders for autonomous function. The brain of this rover is a powerful ESP32-P4, which gives this rover the capability to listen and respond to commands using its built in microphone and speaker.
 
 ## Inspiration
 
@@ -13,7 +13,7 @@ I spend hours each week gardening and mowing grass. As someone into robotics, I 
 ## Features
 
 
-* Under $400, anyone can build it
+* Under $500, anyone can build it
 * All four wheels are motorized
 * C6374 Motor offers 3000W+ of power, more than most commercial systems
 * Nema17 planetary motors lift and raise the mower using a rope system.
@@ -74,7 +74,6 @@ Kicad: [`Schematics/Block-level schematic/`](Schematics/Block-level%20schematic/
 
 ## What I would do differently next time and plan for in the future
 
-- Add cameras and GPS+RTK to the autonomous sensors
 - Use stronger drivetrain motors to support a higher speed and better turning (though it would increase the price to build)
 - Replace garden hose adapter system with a water tank onboard the rover
 - Make a custom PCB that combines all the electronics and sub systems into one board with quick connectors for peripherals (much more expensive though)
