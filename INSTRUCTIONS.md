@@ -410,10 +410,65 @@ Fit every lid only after the electrical checks pass.
 
 ### 9. Add camera sensor
 
+Print out the 3 camera attachment parts in the camera holder folder in printable stls
+
+<img width="1107" height="999" alt="image" src="https://github.com/user-attachments/assets/8cc82b62-abf8-455b-bc8a-a0ebc4483b65" />
+
+Solder wires to 5v and gnd of the esp32, like in the pic below
+
+<img width="540" height="580" alt="image" src="https://github.com/user-attachments/assets/65cfc955-d5f9-4638-9f5f-974bcaafaf45" />
+
+Route it through a back hole, and connect those wires to the main electronic hub, to the mani 5v regulator.
+
+Place the esp32 on the camera holder.stl that you printed <img width="473" height="406" alt="image" src="https://github.com/user-attachments/assets/b33a9efa-e4d6-4b99-b7db-6a9182e26038" />
+
+It should be like this with the wires coming out and you have to route them through that hole
+
+<img width="483" height="494" alt="image" src="https://github.com/user-attachments/assets/579653e2-0e8c-44e9-ae4f-22ee84ed3801" />
+
+Using any sort of thin plastic, cut a 70x60mm sheet of thin polycarb (you don't need to do this, it just adds protection for the camera)
+
+<img width="566" height="442" alt="image" src="https://github.com/user-attachments/assets/525339b6-908a-46ba-a430-b712547595de" />
+
+
+Slide it over the cam.
+
+Put the aluminum attachment mounted to the aluminum, then the camera holder on top, and then the lid, so it is now mounted at the front center of the rover. 
+
+<img width="283" height="317" alt="image" src="https://github.com/user-attachments/assets/b6b88af9-ad8b-4633-8989-ccc86f97aa9e" />
+
+
+
 
 ### 10. Add GPS sensor
 
 Print all 3 stls in the printable STLs cad folder for electronics holder: GPS holder
+
+(insert first pic)
+
+Cut 70x70mm aluminum and glue it on the antenna body
+
+(inset 2nd pic)
+
+It should look clean like this:
+(insert 3rd)
+
+You are supposed to connect the wiring to this pinout on the esp32 board:
+
+(insert 6th picture)
+
+
+
+Through the hole for the wiring, use the I2C 4 pin JST connectors that came with the esp32 host computer package and attach them to the gps. 
+(insert 4th)
+You can route a long wire throughout the aluminum channel and go through the main wiring entrance, but I instead chose to just drill a hole through the casing and later seal it up with hot glue. Connect it to the esp32 connector
+
+(insert 5th)
+
+Mount it along the front side of the rover
+
+
+
 
 ### 9. First power on
 
