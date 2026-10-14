@@ -73,8 +73,7 @@ Kicad: [`Schematics/Block-level schematic/`](Schematics/Block-level%20schematic/
 | Hello Hobby 3/8 in x 36 in wood dowel                        |    1 |      $0.78 |       $0.78 | [Walmart](https://www.walmart.com/ip/684374236)                                                                      |
 | Tool Bench 40 ft diamond-braid rope with winder              |    1 |      $1.50 |       $1.50 | [Dollar Tree](https://www.dollartree.com/tool-bench-40-ft-diamond-braid-rope-with-winder-1-ct/295406)                |
 | Seeed Studio XIAO ESP32S3 Sense                              |    1 |     $23.99 |      $23.99 | [Amazon](https://www.amazon.com/Seeed-Studio-XIAO-ESP32-Sense/dp/B0C69FFVHH)                                         |
-| Quectel LC29HDA dual-frequency RTK base station board         |    1 |     $28.74 |      $28.74 | [Walmart](https://www.walmart.com/ip/High-Precision-RTK-Base-Station-Board-Quectel-LC29H-Dual-Frequency-L1-L5-Positioning-Module-Output-RTCM-Data-LC29HDA/13958603097) |
-| **Estimated total (priced items only)**                      |      |            | **$450.20** |                                                                                                                      |
+| **Estimated total (priced items only)**                      |      |            | **$421.46** |                                                                                                                      |
 
 ## What I would do differently next time and plan for in the future
 
