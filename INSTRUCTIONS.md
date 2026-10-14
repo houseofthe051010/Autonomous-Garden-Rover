@@ -555,6 +555,12 @@ esptool --chip esp32 --port COM3 write-flash 0x0 firmware/esp32-hose/images/esp3
 
 Make sure you use the COM port your esp32 is on and not my COM3
 
+### ESP32 Xiao Cam
+
+Connect the XIAO ESP32S3 and flash the full image, and in terminal flash using esp-idf:
+
+esptool --chip esp32s3 --port COM3 write-flash 0x0 firmware/xiao-esp32s3-camera/images/camera-full-flash-8mb.bin
+
 
 ### ODESC V4.2 mower controller
 
