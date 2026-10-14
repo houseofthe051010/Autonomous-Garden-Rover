@@ -68,7 +68,9 @@ Kicad: [`Schematics/Block-level schematic/`](Schematics/Block-level%20schematic/
 | BNO080/BNO085 9-DOF sensor module                            |    1 |     $18.99 |      $18.99 | [Amazon](https://www.amazon.com/dp/B0HCBRBZ76)                                                                       |
 | Hello Hobby 3/8 in x 36 in wood dowel                        |    1 |      $0.78 |       $0.78 | [Walmart](https://www.walmart.com/ip/684374236)                                                                      |
 | Tool Bench 40 ft diamond-braid rope with winder              |    1 |      $1.50 |       $1.50 | [Dollar Tree](https://www.dollartree.com/tool-bench-40-ft-diamond-braid-rope-with-winder-1-ct/295406)                |
-| **Estimated total**                                          |      |            | **$397.47** |                                                                                                                      |
+| Seeed Studio XIAO ESP32S3 Sense                              |    1 |        TBD |         TBD | [Amazon](https://www.amazon.com/Seeed-Studio-XIAO-ESP32-Sense/dp/B0C69FFVHH)                                         |
+| Quectel LC29HDA dual-frequency RTK base station board         |    1 |        TBD |         TBD | [Walmart](https://www.walmart.com/ip/High-Precision-RTK-Base-Station-Board-Quectel-LC29H-Dual-Frequency-L1-L5-Positioning-Module-Output-RTCM-Data-LC29HDA/13958603097) |
+| **Estimated total (priced items only)**                      |      |            | **$397.47** |                                                                                                                      |
 
 ## What I would do differently next time and plan for in the future
 
