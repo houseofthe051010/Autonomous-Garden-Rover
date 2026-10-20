@@ -8,11 +8,13 @@ I spend hours each week gardening and mowing grass. As someone into robotics, I 
 
 [**Watch the full rover demo**](https://youtu.be/P-olpegfmmU) · [**Forge journal**](https://forge.hackclub.com/projects/3732) · [**See the assembly**](CAD/) · [**Watch the firmware demo**](https://www.youtube.com/watch?v=vQ5m_EN1jJQ) 
 
-[![Autonomous Garden Rover demo](https://i.ytimg.com/vi/P-olpegfmmU/maxresdefault.jpg)](https://youtu.be/P-olpegfmmU)
 
-### CAD assembly
+### CAD Render Assembly
 
 ![CAD assembly](pictures/cad-assembly.png)
+
+[![Autonomous Garden Rover demo](https://i.ytimg.com/vi/P-olpegfmmU/maxresdefault.jpg)](https://youtu.be/P-olpegfmmU)
+
 
 ## Features
 
