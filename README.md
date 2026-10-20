@@ -11,7 +11,7 @@ I spend hours each week gardening and mowing grass. As someone into robotics, I 
 
 ### CAD Render Assembly
 
-![CAD assembly](pictures/cad-assembly.png)
+<img width="1240" height="868" alt="image" src="https://github.com/user-attachments/assets/85659ee2-0136-42df-ae3d-45f9e4b6ca88" />
 
 [![Autonomous Garden Rover demo](https://i.ytimg.com/vi/P-olpegfmmU/maxresdefault.jpg)](https://youtu.be/P-olpegfmmU)
 
